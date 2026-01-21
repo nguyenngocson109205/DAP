@@ -1,0 +1,75 @@
+body {
+    background-color: #f8f9fa;
+    /* Màu nền xám nhẹ */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    /* Đổ bóng nhẹ */
+    margin-bottom: 24px;
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid #f0f0f0;
+    font-weight: 600;
+    border-radius: 12px 12px 0 0 !important;
+    padding: 15px 20px;
+}
+
+.icon-box {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 1.5rem;
+}
+
+.icon-blue {
+    background-color: #e7f1ff;
+    color: #0d6efd;
+}
+
+.icon-green {
+    background-color: #d1e7dd;
+    color: #198754;
+}
+
+.icon-purple {
+    background-color: #e0cffc;
+    color: #6f42c1;
+}
+
+.icon-orange {
+    background-color: #ffe5d0;
+    color: #fd7e14;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.growth-text {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* Chỉnh lại List Group ở phần cuối */
+.region-item {
+    border: 1px solid #f0f0f0;
+    margin-bottom: 10px;
+    border-radius: 8px !important;
+    padding: 15px;
+}
