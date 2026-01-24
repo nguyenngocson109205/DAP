@@ -310,6 +310,104 @@
             options: { plugins: { legend: { display: false } } }
         });
     </script>
+    <div class="chat-launcher" onclick="toggleChat()">
+        <i class="bi bi-chat-dots-fill fs-3"></i>
+    </div>
+
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <span><i class="bi bi-robot me-2"></i>AI Assistant</span>
+            <button type="button" class="btn-close btn-close-white" onclick="toggleChat()"></button>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">Xin chào! Tôi có thể giúp gì cho bạn về số liệu hôm nay?</div>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="userInput" class="form-control" placeholder="Hỏi gì đi..." onkeypress="handleEnter(event)">
+            <button class="btn btn-primary" onclick="sendMessage()">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // ... (Code vẽ biểu đồ giữ nguyên, không cần sửa gì) ...
+        // Fake Data cho Charts...
+        new Chart(document.getElementById('salesTrendChart'), { /*...*/ });
+        new Chart(document.getElementById('categoryChart'), { /*...*/ });
+        new Chart(document.getElementById('growthChart'), { /*...*/ });
+        new Chart(document.getElementById('performanceChart'), { /*...*/ });
+        new Chart(document.getElementById('stateSalesChart'), { /*...*/ });
+    </script>
+
+    <script>
+        // Hàm bật/tắt khung chat (Debug log để kiểm tra)
+        function toggleChat() {
+            console.log("Nút chat đã được bấm!");
+            const chatWindow = document.getElementById('chatWindow');
+            if (chatWindow.style.display === 'none' || chatWindow.style.display === '') {
+                chatWindow.style.display = 'flex';
+                document.getElementById('userInput').focus();
+            } else {
+                chatWindow.style.display = 'none';
+            }
+        }
+
+        // Xử lý phím Enter
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        // Hàm gửi tin nhắn gọi API
+        async function sendMessage() {
+            const inputField = document.getElementById('userInput');
+            const message = inputField.value.trim();
+            const chatBox = document.getElementById('chatMessages');
+
+            if (message === "") return;
+
+            // Hiện tin nhắn User
+            chatBox.innerHTML += `<div class="message user">${message}</div>`;
+            inputField.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Hiện trạng thái đang gõ...
+            const loadingId = 'loading-' + Date.now();
+            chatBox.innerHTML += `<div class="message bot" id="${loadingId}">...</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                // Gọi API Flask (Lưu ý: Server Python phải đang chạy)
+                const response = await fetch('http://127.0.0.1:5000/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+                document.getElementById(loadingId).remove();
+
+                if (data.reply) {
+                    chatBox.innerHTML += `<div class="message bot">${data.reply}</div>`;
+                } else {
+                    chatBox.innerHTML += `<div class="message bot text-danger">Lỗi format server</div>`;
+                }
+
+            } catch (error) {
+                if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+                console.error('Error:', error);
+                chatBox.innerHTML += `<div class="message bot text-danger">Không kết nối được Server! (Check F12)</div>`;
+            }
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+
+</body>
+</html>
 </body>
 
 </html>

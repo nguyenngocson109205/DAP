@@ -73,3 +73,97 @@ body {
     border-radius: 8px !important;
     padding: 15px;
 }
+/* --- CHAT WIDGET STYLES --- */
+
+/* 1. Nút tròn (Launcher) */
+.chat-launcher {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background-color: #0d6efd; /* Màu xanh Bootstrap */
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 9999 !important;
+    transition: transform 0.3s ease;
+}
+
+.chat-launcher:hover {
+    transform: scale(1.1);
+}
+
+/* 2. Khung Chat (Ẩn mặc định) */
+.chat-window {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 350px;
+    height: 450px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    display: none; /* Ẩn đi */
+    flex-direction: column;
+    z-index: 9999 !important;
+    overflow: hidden;
+}
+
+/* Header của khung chat */
+.chat-header {
+    background: #0d6efd;
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+}
+
+/* Vùng hiển thị tin nhắn */
+.chat-messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    background: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Bong bóng tin nhắn */
+.message {
+    max-width: 80%;
+    padding: 8px 12px;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.message.user {
+    align-self: flex-end;
+    background: #0d6efd;
+    color: white;
+    border-bottom-right-radius: 2px;
+}
+
+.message.bot {
+    align-self: flex-start;
+    background: #e9ecef;
+    color: #333;
+    border-bottom-left-radius: 2px;
+}
+
+/* Vùng nhập liệu */
+.chat-input-area {
+    padding: 10px;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    gap: 10px;
+    background: white;
+}
