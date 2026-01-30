@@ -73,6 +73,7 @@ body {
     border-radius: 8px !important;
     padding: 15px;
 }
+
 /* --- CHAT WIDGET STYLES --- */
 
 /* 1. Nút tròn (Launcher) */
@@ -82,14 +83,15 @@ body {
     right: 20px;
     width: 60px;
     height: 60px;
-    background-color: #0d6efd; /* Màu xanh Bootstrap */
+    background-color: #0d6efd;
+    /* Màu xanh Bootstrap */
     color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 9999 !important;
     transition: transform 0.3s ease;
 }
@@ -107,8 +109,9 @@ body {
     height: 450px;
     background: white;
     border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-    display: none; /* Ẩn đi */
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    display: none;
+    /* Ẩn đi */
     flex-direction: column;
     z-index: 9999 !important;
     overflow: hidden;
@@ -166,4 +169,46 @@ body {
     display: flex;
     gap: 10px;
     background: white;
+}
+
+/* Card dự báo AI chuyên biệt */
+.card-ai-forecast {
+    border-left: 5px solid #6610f2 !important;
+    /* Viền tím đặc trưng AI */
+    transition: transform 0.2s;
+}
+
+.card-ai-forecast:hover {
+    transform: translateY(-2px);
+    /* Hiệu ứng nhấc nhẹ khi di chuột */
+}
+
+/* Badge trạng thái xu hướng */
+.badge-trend-up {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: #198754;
+    border: 1px solid #198754;
+}
+
+.badge-trend-down {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+
+/* Màu tím cho icon AI */
+.text-purple {
+    color: #6610f2;
+}
+
+/* Module AI Forecast */
+.card-ai-forecast {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-ai-forecast:hover {
+    transform: translateY(-5px);
+    /* Nhấc nhẹ lên */
+    box-shadow: 0 10px 20px rgba(102, 16, 242, 0.15) !important;
+    /* Bóng đổ màu tím */
 }

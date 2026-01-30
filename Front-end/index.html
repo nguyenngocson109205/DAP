@@ -108,6 +108,61 @@
             </div>
         </div>
 
+        <div class="row mt-4 mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm card-ai-forecast" style="border-left: 5px solid #6610f2;">
+                    <div
+                        class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-0">
+                                <i class="bi bi-magic me-2" style="color: #6610f2;"></i>AI Revenue Forecast
+                            </h5>
+                            <small class="text-muted">Dự báo doanh thu 24 giờ tới (Powered by Python)</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm" id="modelSelect">
+                                <option value="gru">Deep Learning (GRU)</option>
+                                <option value="xgboost">XGBoost (Machine Learning)</option>
+                            </select>
+
+                            <button class="btn btn-primary btn-sm px-3" onclick="runPrediction()">
+                                <i class="bi bi-cpu-fill me-1"></i> Dự báo ngay
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-9">
+                                <canvas id="predictionChart" height="100"></canvas>
+                            </div>
+
+                            <div class="col-md-3 d-flex flex-column justify-content-center border-start">
+                                <div class="mb-4 text-center">
+                                    <small class="text-muted text-uppercase fw-bold">Cao nhất</small>
+                                    <h3 class="fw-bold text-success" id="predMax">---</h3>
+                                </div>
+                                <div class="mb-4 text-center">
+                                    <small class="text-muted text-uppercase fw-bold">Thấp nhất</small>
+                                    <h3 class="fw-bold text-danger" id="predMin">---</h3>
+                                </div>
+                                <div class="text-center">
+                                    <small class="text-muted text-uppercase fw-bold">Xu hướng</small>
+                                    <div class="mt-1">
+                                        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill"
+                                            id="predTrend">
+                                            <i class="bi bi-hourglass-split"></i> Sẵn sàng
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
         <div class="row mt-2">
             <div class="col-md-8">
                 <div class="card h-100">
@@ -115,6 +170,7 @@
                         <span><i class="bi bi-graph-up text-primary"></i> Sales Trend</span>
                         <span class="fw-bold">$22.1M <small class="text-success">+79.0%</small></span>
                     </div>
+
                     <div class="card-body">
                         <canvas id="salesTrendChart" height="100"></canvas>
                     </div>
@@ -319,13 +375,14 @@
             <span><i class="bi bi-robot me-2"></i>AI Assistant</span>
             <button type="button" class="btn-close btn-close-white" onclick="toggleChat()"></button>
         </div>
-        
+
         <div class="chat-messages" id="chatMessages">
             <div class="message bot">Xin chào! Tôi có thể giúp gì cho bạn về số liệu hôm nay?</div>
         </div>
 
         <div class="chat-input-area">
-            <input type="text" id="userInput" class="form-control" placeholder="Hỏi gì đi..." onkeypress="handleEnter(event)">
+            <input type="text" id="userInput" class="form-control" placeholder="Hỏi gì đi..."
+                onkeypress="handleEnter(event)">
             <button class="btn btn-primary" onclick="sendMessage()">
                 <i class="bi bi-send-fill"></i>
             </button>
@@ -333,7 +390,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <script>
         // ... (Code vẽ biểu đồ giữ nguyên, không cần sửa gì) ...
         // Fake Data cho Charts...
@@ -398,15 +455,17 @@
                 }
 
             } catch (error) {
-                if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+                if (document.getElementById(loadingId)) document.getElementById(loadingId).remove();
                 console.error('Error:', error);
                 chatBox.innerHTML += `<div class="message bot text-danger">Không kết nối được Server! (Check F12)</div>`;
             }
             chatBox.scrollTop = chatBox.scrollHeight;
         }
     </script>
+    <script src="index.js"></script>
 
 </body>
+
 </html>
 </body>
 
