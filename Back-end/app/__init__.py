@@ -7,11 +7,16 @@ def create_app():
     load_dotenv()
 
     app = Flask(__name__)
-    app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-key")
+    
+    # Secret Key (Quan trọng cho session)
+    app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-key-bi-mat-cua-son")
 
+    # Cho phép Frontend gọi API (CORS)
     CORS(app)
 
-    from .routes import chat_bp
-    app.register_blueprint(chat_bp)
+    # --- SỬA Ở ĐÂY ---
+    # Vì trong routes.py mình đặt tên là 'main', nên ở đây phải import 'main'
+    from .routes import main 
+    app.register_blueprint(main)
 
-    return app   # 👈 BẮT BUỘC
+    return app
