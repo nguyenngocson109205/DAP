@@ -1,7 +1,7 @@
 from app import create_app
 
 app = create_app()
-print("STARTING FLASK...")
+print("Cổng đang mở ở PORT 5000")
 
 if __name__ == "__main__":
     app.run(
