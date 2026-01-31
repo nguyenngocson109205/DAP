@@ -34,15 +34,13 @@ class AIService:
     def load_resources(self):
         if self.is_loaded: return
         try:
-            print("🔄 Đang nạp Model & Scaler...")
             self.model = load_model(os.path.join(MODEL_DIR, 'aqi_forecasting_gru_24h_vfinal.keras'))
             self.scaler_X = joblib.load(os.path.join(MODEL_DIR, 'scaler_X_final.pkl'))
             self.scaler_y = joblib.load(os.path.join(MODEL_DIR, 'scaler_y_final.pkl'))
             self.sample_input = np.load(os.path.join(MODEL_DIR, 'sample_input.npy'))
             self.is_loaded = True
-            print("✅ Đã nạp xong!")
         except Exception as e:
-            print(f"⚠️ Lỗi load resources: {e}")
+            print(f"Lỗi load resources: {e}")
 
     def get_weather_forecast(self):
         try:
@@ -63,7 +61,7 @@ class AIService:
                 })
             return forecast_data
         except Exception as e:
-            print(f"❌ Lỗi API Weather: {e}")
+            print(f"Lỗi API Weather: {e}")
             return None
 
     def predict_aqi(self, model_type='gru', current_hour=0):
