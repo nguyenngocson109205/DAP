@@ -13,7 +13,7 @@ def chat():
     # Kiểm tra xem có history trong session chưa
     if "history" not in session:
         session["history"] = [
-            {"role": "system", "content": "Bạn là chatbot hỗ trợ học Python"}
+            {"role": "system", "content": "Bạn là chatbot dự đoán không khí"}
         ]
 
     # Lấy tin nhắn từ User
