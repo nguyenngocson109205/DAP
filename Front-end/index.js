@@ -161,6 +161,105 @@ async function runPrediction() {
         alert("Không kết nối được với Server Python! Hãy chắc chắn bạn đã chạy 'python run.py'");
     }
 }
+document.addEventListener('DOMContentLoaded', function () {
+
+    // --- 1. KHAI BÁO BIẾN (Lấy các phần tử HTML về trước) ---
+    // Dùng querySelector thì nhớ phải có dấu thăng (#) cho ID nhé
+    const btnRender = document.querySelector('#btnRender');
+    const container = document.querySelector('#chartContainer');
+    const title = document.querySelector('#chartTitle');
+
+    // Lấy 2 ô select
+    const selectMetric = document.querySelector('#filterMetric');
+    const selectTime = document.querySelector('#filterTime');
+
+    // --- 2. GẮN SỰ KIỆN (Add Event Listener) ---
+    // Bây giờ gọi tên biến là được, không cần gõ lại document.querySelector...
+    btnRender.addEventListener('click', function () {
+
+        // Lấy giá trị hiện tại (value) của 2 ô select khi bấm nút
+        const metricValue = selectMetric.value;
+        const timeValue = selectTime.value;
+
+        console.log(`Đang xử lý: ${metricValue} - ${timeValue}`);
+
+        // --- 3. XỬ LÝ GIAO DIỆN (Logic Xóa cũ - Thêm mới) ---
+
+        // B1: Xóa sạch cái cũ
+        container.innerHTML = '';
+
+        // B2: Tạo thẻ Canvas mới
+        const newCanvas = document.createElement('canvas');
+        newCanvas.id = 'dynamicChart';
+        newCanvas.style.maxHeight = '400px';
+
+        // B3: Nhét vào khung
+        container.appendChild(newCanvas);
+
+        // B4: Vẽ
+        updateTitle(metricValue, timeValue); // Cập nhật tiêu đề
+
+        // Điều hướng vẽ biểu đồ nào
+        if (metricValue === 'pm25') {
+            drawChartPM25(newCanvas, timeValue);
+        } else if (metricValue === 'pm10') {
+            drawChartPM10(newCanvas, timeValue);
+        } else {
+            drawChartAQI(newCanvas, timeValue);
+        }
+    });
+
+});
+
+// --- CÁC HÀM VẼ (Giữ nguyên như cũ) ---
+function updateTitle(metric, time) {
+    // Logic đổi tên tiêu đề...
+    if (title) title.innerText = `Kết quả: ${metric} (${time})`;
+}
+
+function drawChartPM25(canvas, time) {
+    // Code vẽ chart...
+    new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: ['1h', '2h', '3h', '4h', '5h'],
+            datasets: [{
+                label: 'PM2.5 Demo',
+                data: [10, 20, 15, 30, 25],
+                borderColor: 'red'
+            }]
+        }
+    });
+}
+
+function drawChartPM10(canvas, time) {
+    // Code vẽ chart...
+    new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: ['Khu A', 'Khu B'],
+            datasets: [{
+                label: 'PM10 Demo',
+                data: [50, 80],
+                backgroundColor: 'blue'
+            }]
+        }
+    });
+}
+
+function drawChartAQI(canvas, time) {
+    // Code vẽ chart...
+    new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: ['Tốt', 'Xấu'],
+            datasets: [{
+                data: [70, 30],
+                backgroundColor: ['green', 'orange']
+            }]
+        }
+    });
+}
 
 // Chạy lần đầu khi load trang
 document.addEventListener('DOMContentLoaded', function () {

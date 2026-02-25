@@ -8,8 +8,8 @@ def create_app():
 
     app = Flask(__name__)
     
-    #key api
-    app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-key-bi-mat-cua-son")
+    #sign token
+    app.secret_key = os.getenv("FLASK_SECRET_KEY")
 
     # link tới front
     CORS(app)

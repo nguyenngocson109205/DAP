@@ -15,43 +15,59 @@
 
     <div class="container-fluid p-4">
 
-        <div class="d-flex align-items-center mb-4">
-            <div class="bg-dark text-white p-2 rounded me-3">
-                <i class="bi bi-bar-chart-fill fs-4"></i>
-            </div>
-            <div>
-                <h4 class="mb-0 fw-bold">Analytics Dashboard</h4>
-                <small class="text-muted">Monitor business performance with interactive cross-filtering</small>
-            </div>
-        </div>
-
         <div class="card mb-4">
             <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-12 text-muted mb-2"><i class="bi bi-funnel"></i> Filters</div>
-                    <div class="col-md-4">
-                        <label class="form-label small text-muted">Category</label>
-                        <select class="form-select">
-                            <option>All Categories</option>
-                            <option>Electronics</option>
-                            <option>Clothing</option>
-                        </select>
+                <div class="container-fluid p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-success text-white p-2 rounded me-3">
+                            <i class="bi bi-clouds-fill fs-4"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold">Air Quality Dashboard</h4>
+                            <small class="text-muted">Hệ thống giám sát và dự báo chất lượng không khí (AQI)</small>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label small text-muted">Region</label>
-                        <select class="form-select">
-                            <option>All Regions</option>
-                            <option>North America</option>
-                            <option>Europe</option>
-                        </select>
+
+                    <div class="card mb-4 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-12 text-muted mb-2"><i class="bi bi-funnel"></i> Bộ lọc dữ liệu</div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted" for="filterMetric">Chỉ số</label>
+                                    <select class="form-select" id="filterMetric" onchange="handleFilterChange()">
+                                        <option value="pm25">PM2.5</option>
+                                        <option value="pm10">PM10</option>
+                                        <option value="aqi">AQI Tổng hợp</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted" for="filterTime">Thời gian</label>
+                                    <select class="form-select" id="filterTime" onchange="handleFilterChange()">
+                                        <option value="24h">24 Giờ qua</option>
+                                        <option value="7d">7 Ngày qua</option>
+                                        <option value="1m">Tháng này</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label small text-muted">Time Period</label>
-                        <select class="form-select">
-                            <option>All Time</option>
-                            <option>Last 30 Days</option>
-                            <option>This Year</option>
-                        </select>
+                    <div class="row mt-3 mb-4">
+                        <div class="col-12 text-center">
+                            <button id="btnRender" class="btn btn-primary px-4">
+                                <i class="bi bi-graph-up-arrow"></i> Vẽ biểu đồ
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0">
+                            <h5 class="fw-bold text-success" id="chartTitle">Kết quả hiển thị</h5>
+                        </div>
+                        <div class="card-body" id="chartContainer">
+                            <p class="text-center text-muted py-5">Vui lòng chọn bộ lọc và bấm nút...</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -167,205 +183,127 @@
             <div class="col-md-8">
                 <div class="card h-100">
                     <div class="card-header d-flex justify-content-between bg-white border-0 pt-4 px-4">
-                        <span><i class="bi bi-graph-up text-primary"></i> Sales Trend</span>
-                        <span class="fw-bold">$22.1M <small class="text-success">+79.0%</small></span>
+                        <span><i class="bi bi-graph-up text-primary"></i> AQI theo thời gian </span>
+
                     </div>
 
-                    <div class="card-body">
-                        <canvas id="salesTrendChart" height="100"></canvas>
+                    <div class="card-body text-center">
+                        <img src="./image/aqi_chart.png" style="max-width: 100%; height: auto; object-fit: contain;"
+                            alt="Biểu đồ AQI">
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card h-100">
                     <div class="card-header bg-white border-0 pt-4 px-4">
-                        <span><i class="bi bi-pie-chart-fill text-success"></i> Revenue by Category</span>
-                        <span class="float-end fw-bold">$44.0M</span>
+                        <span><i class="bi bi-pie-chart-fill text-success"></i> Biểu đồ tròn </span>
                     </div>
                     <div class="card-body d-flex justify-content-center align-items-center">
-                        <div style="width: 250px;">
-                            <canvas id="categoryChart"></canvas>
-                        </div>
+                        <img src="./image/aqi_Categories.png"
+                            style="max-width: 100%; height: auto; object-fit: contain;" alt="Biểu đồ AQI">
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="row mt-2">
-            <div class="col-md-6">
-                <div class="card h-100">
-                    <div class="card-header bg-white border-0 pt-4 px-4">
-                        <span><i class="bi bi-bar-chart-line text-success"></i> YoY Growth by Region</span>
-                        <span class="float-end text-success fw-bold">+2.1% <small
-                                class="text-muted fw-normal">Average</small></span>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="growthChart" height="150"></canvas>
-                    </div>
+    <div class="row mt-2">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <span><i class="bi bi-bar-chart-line text-success"></i> Biểu đồ trung bình theo tháng và
+                        giờ</span>
+                </div>
+                <div class="card-body">
+                    <img src="./image/aqi_AverageByMothnAndHour1.png"
+                        style="max-width: 100%; height: auto; object-fit: contain;" alt="Biểu đồ AQI">
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card h-100">
-                    <div class="card-header bg-white border-0 pt-4 px-4">
-                        <span><i class="bi bi-activity text-purple"></i> Performance Metrics</span>
-                        <span class="float-end fw-bold">28.3K <small class="text-success">+34.8%</small></span>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="performanceChart" height="150"></canvas>
-                    </div>
-                    <div class="card-footer bg-white border-0 d-flex justify-content-around pb-4">
-                        <div class="text-center">
-                            <h5 class="mb-0 fw-bold">$218</h5>
-                            <small class="text-muted">Avg Order Value</small>
-                        </div>
-                        <div class="text-center">
-                            <h5 class="mb-0 fw-bold">48.3K</h5>
-                            <small class="text-muted">Units Sold</small>
-                        </div>
-                    </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <span><i class="bi bi-activity text-purple"></i>Biểu đồ theo mùa vụ</span>
+                </div>
+                <img src="./image/SeasonalTrend.png" style="max-width: 100%; height: auto; object-fit: contain;"
+                    alt="Biểu đồ AQI">
+            </div>
+            <div class="card-footer bg-white border-0 d-flex justify-content-around pb-4">
+                <div class="text-center">
+                    <h5 class="mb-0 fw-bold">$218</h5>
+                    <small class="text-muted">Avg Order Value</small>
+                </div>
+                <div class="text-center">
+                    <h5 class="mb-0 fw-bold">48.3K</h5>
+                    <small class="text-muted">Units Sold</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="row mt-2">
+        <div class="col-md-8">
+            <div class="card h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold">Sales Performance by State</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="stateSalesChart" height="150"></canvas>
                 </div>
             </div>
         </div>
 
-        <div class="row mt-2">
-            <div class="col-md-8">
-                <div class="card h-100">
-                    <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h5 class="fw-bold">Sales Performance by State</h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="stateSalesChart" height="150"></canvas>
-                    </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold">Regional Overview</h5>
                 </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h5 class="fw-bold">Regional Overview</h5>
+                <div class="card-body">
+                    <div class="region-item">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-circle-fill text-primary me-2 small"></i>
+                            <span class="fw-bold">North America</span>
+                        </div>
+                        <div class="small text-muted mb-2">West Coast & Major Markets</div>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="fw-bold fs-5">$12.1M</div>
+                                <small class="text-muted">Sales</small>
+                            </div>
+                            <div class="col-6">
+                                <div class="fw-bold fs-5">100</div>
+                                <small class="text-muted">Stores</small>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-success small"><i class="bi bi-shop"></i> +11 new stores</div>
                     </div>
-                    <div class="card-body">
-                        <div class="region-item">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="bi bi-circle-fill text-primary me-2 small"></i>
-                                <span class="fw-bold">North America</span>
-                            </div>
-                            <div class="small text-muted mb-2">West Coast & Major Markets</div>
-                            <div class="row">
-                                <div class="col-6">
-                                    <div class="fw-bold fs-5">$12.1M</div>
-                                    <small class="text-muted">Sales</small>
-                                </div>
-                                <div class="col-6">
-                                    <div class="fw-bold fs-5">100</div>
-                                    <small class="text-muted">Stores</small>
-                                </div>
-                            </div>
-                            <div class="mt-2 text-success small"><i class="bi bi-shop"></i> +11 new stores</div>
-                        </div>
 
-                        <div class="region-item">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="bi bi-circle-fill text-success me-2 small"></i>
-                                <span class="fw-bold">Europe</span>
-                            </div>
-                            <div class="small text-muted mb-2">Midwest & Industrial Centers</div>
-                            <div class="row">
-                                <div class="col-6">
-                                    <div class="fw-bold fs-5">$5.0M</div>
-                                    <small class="text-muted">Sales</small>
-                                </div>
-                                <div class="col-6">
-                                    <div class="fw-bold fs-5">41</div>
-                                    <small class="text-muted">Stores</small>
-                                </div>
-                            </div>
-                            <div class="mt-2 text-success small"><i class="bi bi-shop"></i> +3 new stores</div>
+                    <div class="region-item">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-circle-fill text-success me-2 small"></i>
+                            <span class="fw-bold">Europe</span>
                         </div>
+                        <div class="small text-muted mb-2">Midwest & Industrial Centers</div>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="fw-bold fs-5">$5.0M</div>
+                                <small class="text-muted">Sales</small>
+                            </div>
+                            <div class="col-6">
+                                <div class="fw-bold fs-5">41</div>
+                                <small class="text-muted">Stores</small>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-success small"><i class="bi bi-shop"></i> +3 new stores</div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        // Fake Data cho Charts
-        new Chart(document.getElementById('salesTrendChart'), {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-                datasets: [{
-                    label: 'Sales',
-                    data: [1300, 1500, 1750, 1600, 1550, 2100, 2000, 2400],
-                    borderColor: '#36a2eb',
-                    tension: 0.4,
-                    fill: true,
-                    backgroundColor: 'rgba(54, 162, 235, 0.1)'
-                }]
-            },
-            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-        });
-
-        new Chart(document.getElementById('categoryChart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Electronics', 'Clothing', 'Home', 'Sports'],
-                datasets: [{
-                    data: [40, 25, 20, 15],
-                    backgroundColor: ['#36a2eb', '#ff6384', '#ffcd56', '#4bc0c0'],
-                    borderWidth: 0
-                }]
-            },
-            options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } }
-        });
-
-        new Chart(document.getElementById('growthChart'), {
-            type: 'bar',
-            data: {
-                labels: ['Africa', 'Europe', 'N.America', 'Asia', 'Latam'],
-                datasets: [{
-                    label: 'Growth %',
-                    data: [5, 4, 2.5, 2, -3],
-                    backgroundColor: (ctx) => {
-                        const val = ctx.raw;
-                        return val >= 0 ? '#198754' : '#dc3545';
-                    },
-                    borderRadius: 4
-                }]
-            },
-            options: { plugins: { legend: { display: false } } }
-        });
-
-        new Chart(document.getElementById('performanceChart'), {
-            type: 'line',
-            data: {
-                labels: ['Q1', 'Q2', 'Q3', 'Q4', 'Q1', 'Q2', 'Q3', 'Q4'],
-                datasets: [{
-                    label: 'Metrics',
-                    data: [35, 38, 42, 45, 36, 42, 48, 46],
-                    borderColor: '#6f42c1',
-                    tension: 0.4,
-                    fill: true,
-                    backgroundColor: 'rgba(111, 66, 193, 0.1)'
-                }]
-            },
-            options: { plugins: { legend: { display: false } } }
-        });
-
-        new Chart(document.getElementById('stateSalesChart'), {
-            type: 'bar',
-            data: {
-                labels: ['California', 'Texas', 'New York', 'Florida', 'Illinois', 'Ohio', 'Georgia'],
-                datasets: [{
-                    data: [2.9, 2.7, 2.5, 2.2, 1.9, 1.8, 1.7],
-                    backgroundColor: ['#00a8e8', '#009ff5', '#0096ff', '#00aeff', '#00b488', '#f9a825', '#00b488']
-                }]
-            },
-            options: { plugins: { legend: { display: false } } }
-        });
-    </script>
     <div class="chat-launcher" onclick="toggleChat()">
         <i class="bi bi-chat-dots-fill fs-3"></i>
     </div>
