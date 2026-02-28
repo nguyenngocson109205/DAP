@@ -223,7 +223,8 @@ body {
 /* Khung chứa biểu đồ - BẮT BUỘC phải có chiều cao */
 .echart-display {
     width: 100%;
-    height: 500px; /* Bạn có thể chỉnh lên 600px tùy ý */
+    height: 500px;
+    /* Bạn có thể chỉnh lên 600px tùy ý */
     min-height: 400px;
 }
 
@@ -246,6 +247,12 @@ body {
     padding: 8px 15px;
     border-radius: 20px;
     display: inline-block;
+}
+
+/* Khung chứa các biểu đồ nhỏ */
+.echart-mini {
+    width: 100%;
+    height: 250px;
 }
 
 /* Đảm bảo biểu đồ hiển thị tốt trên thiết bị di động */

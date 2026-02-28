@@ -261,6 +261,101 @@ function drawChartAQI(canvas, time) {
     });
 }
 
+document.addEventListener('DOMContentLoaded', function () {
+
+    // Đường dẫn tới file JSON mà bạn đã export bằng Python
+    const DATA_URL = 'data/hcm_aqi_dataset.json';
+
+    $.get(DATA_URL, function (_rawData) {
+        render6MiniCharts(_rawData);
+    });
+
+    // Mảng lưu trữ 6 biến chart để lát nữa xử lý co giãn màn hình
+    const chartInstances = [];
+
+    function render6MiniCharts(_rawData) {
+        // Cấu hình danh sách các chất, ID của thẻ div tương ứng và màu sắc
+        const chartConfigs = [
+            { indicator: 'PM2.5', id: 'race-PM25', color: '#dc3545' },
+            { indicator: 'PM10', id: 'race-PM10', color: '#fd7e14' },
+            { indicator: 'NO2', id: 'race-NO2', color: '#0dcaf0' },
+            { indicator: 'O3', id: 'race-O3', color: '#0d6efd' },
+            { indicator: 'SO2', id: 'race-SO2', color: '#6f42c1' },
+            { indicator: 'AQI', id: 'race-AQI', color: '#198754' }
+        ];
+
+        // Lấy dòng Header đầu tiên để xác định vị trí các cột
+        // Ví dụ: ['Year', 'PM2.5', 'PM10', 'CO', 'NO2', ...]
+        const header = _rawData[0];
+
+        // Duyệt qua từng chất để vẽ biểu đồ riêng
+        chartConfigs.forEach(function (config) {
+            const dom = document.getElementById(config.id);
+            if (!dom) return;
+
+            const myChart = echarts.init(dom);
+            chartInstances.push(myChart);
+
+            // Tìm xem chất này nằm ở cột số mấy trong mảng (Giải quyết triệt để lỗi undefined)
+            const colIndex = header.indexOf(config.indicator);
+
+            const option = {
+                animationDuration: 10000, // Đua trong 10 giây
+                dataset: {
+                    source: _rawData // Truyền toàn bộ dữ liệu vào
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                grid: {
+                    top: 20, bottom: 25, left: 35, right: 50 // Căn lề cho khung nhỏ
+                },
+                xAxis: {
+                    type: 'category', // Trục X là Năm
+                },
+                yAxis: {
+                    type: 'value',
+                    splitLine: { show: true, lineStyle: { type: 'dashed', color: '#eee' } }
+                },
+                series: [{
+                    type: 'line',
+                    name: config.indicator,
+                    encode: {
+                        x: 'Year',
+                        y: config.indicator
+                    },
+                    showSymbol: false,
+                    lineStyle: {
+                        width: 3,
+                        color: config.color // Đổi màu line theo chất
+                    },
+                    itemStyle: {
+                        color: config.color
+                    },
+                    endLabel: {
+                        show: true,
+                        formatter: function (params) {
+                            // Lấy giá trị chính xác và làm tròn 1 chữ số thập phân
+                            let val = params.value[colIndex];
+                            return val ? Number(val).toFixed(1) : '';
+                        },
+                        fontSize: 12,
+                        fontWeight: 'bold',
+                        color: config.color
+                    }
+                }]
+            };
+
+            myChart.setOption(option);
+        });
+    }
+
+    // Tự động co giãn CẢ 6 BIỂU ĐỒ khi thay đổi kích thước trình duyệt
+    window.addEventListener('resize', function () {
+        chartInstances.forEach(chart => chart.resize());
+    });
+});
+
 // Chạy lần đầu khi load trang
 document.addEventListener('DOMContentLoaded', function () {
     runPrediction();
