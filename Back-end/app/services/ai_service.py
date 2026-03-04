@@ -31,16 +31,17 @@ class AIService:
         self.sample_input = None 
         self.is_loaded = False
 
-    def load_resources(self):
-        if self.is_loaded: return
-        try:
-            self.model = load_model(os.path.join(MODEL_DIR, 'aqi_forecasting_gru_24h_vfinal.keras'))
-            self.scaler_X = joblib.load(os.path.join(MODEL_DIR, 'scaler_X_final.pkl'))
-            self.scaler_y = joblib.load(os.path.join(MODEL_DIR, 'scaler_y_final.pkl'))
-            self.sample_input = np.load(os.path.join(MODEL_DIR, 'sample_input.npy'))
-            self.is_loaded = True
-        except Exception as e:
-            print(f"Lỗi load resources: {e}")
+    # def load_resources(self):
+        # if self.is_loaded: return
+        # try:
+        #     self.model = load_model(os.path.join(MODEL_DIR, 'aqi_forecasting_gru_24h_vfinal.keras'))
+        #     self.scaler_X = joblib.load(os.path.join(MODEL_DIR, 'scaler_X_final.pkl'))
+        #     self.scaler_y = joblib.load(os.path.join(MODEL_DIR, 'scaler_y_final.pkl'))
+        #     self.sample_input = np.load(os.path.join(MODEL_DIR, 'sample_input.npy'))
+        #     self.is_loaded = True
+        #     print("[+] BÁO CÁO: Nạp toàn bộ Model (.keras), Scaler (.pkl) và Sample (.npy) THÀNH CÔNG! 🚀")
+        # except Exception as e:
+        #     print(f"[-] Lỗi load resources: {e}")
 
     def get_weather_forecast(self):
         try:

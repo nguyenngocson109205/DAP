@@ -14,8 +14,42 @@
 
 <body>
 
-    <div class="container-fluid p-4">
+    <!-- thanh Bar -->
+    <nav id="smartNavbar" class="navbar navbar-expand-lg ">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold text-info" href="index.html">
+                <i class="bi bi-cloud-haze2-fill me-2"></i>AIR Pulution
+            </a>
 
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="topMenu">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active fw-bold" href="index.html">
+                            <i class="bi bi-house-door me-1"></i> Tổng quan
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold" href="history.html">
+                            <i class="bi bi-bar-chart-steps me-1"></i> Lịch sử Ô nhiễm
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold" href="wind.html">
+                            <i class="bi bi-compass me-1"></i> Phân tích Khí hậu
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!--  -->
+
+
+    <div class="container-fluid p-4">
 
         <div class="card mb-4">
             <div class="card-body">
@@ -24,6 +58,7 @@
                         <div class="bg-success text-white p-2 rounded me-3">
                             <i class="bi bi-clouds-fill fs-4"></i>
                         </div>
+                        <!-- headerLine -->
                         <div>
                             <h4 class="mb-0 fw-bold">Air Quality Dashboard</h4>
                             <small class="text-muted">Hệ thống giám sát và dự báo chất lượng không khí (AQI)</small>
@@ -46,7 +81,7 @@
                                 </div>
                             </div>
                         </div>
-
+                        <!-- vẽ biểu đồ  -->
                         <div class="col-md-3">
                             <div class="card kpi-card border-0 shadow-sm h-100">
                                 <div class="card-body d-flex justify-content-between align-items-center">
@@ -146,7 +181,7 @@
                 </div>
             </div>
         </div>
-
+        <!-- dự đoán chấty lượng không khí -->
         <div class="row mt-4 mb-4">
             <div class="col-12">
                 <div class="card border-0 shadow-sm card-ai-forecast" style="border-left: 5px solid #6610f2;">
@@ -156,11 +191,11 @@
                             <h5 class="fw-bold mb-0">
                                 <i class="bi bi-magic me-2" style="color: #6610f2;"></i>AI Revenue Forecast
                             </h5>
-                            <small class="text-muted">Dự báo doanh thu 24 giờ tới (Powered by Python)</small>
+                            <small class="text-muted">Dự báo pm2.5 10 giờ tới</small>
                         </div>
                         <div class="d-flex gap-2">
                             <select class="form-select form-select-sm" id="modelSelect">
-                                <option value="gru">Deep Learning (GRU)</option>
+                                <option value="gru">LSTM (Deep Learning)</option>
                                 <option value="xgboost">XGBoost (Machine Learning)</option>
                             </select>
 
@@ -185,86 +220,14 @@
                                     <small class="text-muted text-uppercase fw-bold">Thấp nhất</small>
                                     <h3 class="fw-bold text-danger" id="predMin">---</h3>
                                 </div>
-                                <div class="text-center">
-                                    <small class="text-muted text-uppercase fw-bold">Xu hướng</small>
-                                    <div class="mt-1">
-                                        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill"
-                                            id="predTrend">
-                                            <i class="bi bi-hourglass-split"></i> Sẵn sàng
-                                        </span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-
-        <div class="row mt-2">
-            <div class="col-md-8">
-                <div class="card h-100">
-                    <div class="card-header d-flex justify-content-between bg-white border-0 pt-4 px-4">
-                        <span><i class="bi bi-graph-up text-primary"></i> AQI theo thời gian </span>
-
-                    </div>
-
-                    <div class="card-body text-center">
-                        <img src="./image/aqi_chart.png" style="max-width: 100%; height: auto; object-fit: contain;"
-                            alt="Biểu đồ AQI">
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-header bg-white border-0 pt-4 px-4">
-                        <span><i class="bi bi-pie-chart-fill text-success"></i> Biểu đồ tròn </span>
-                    </div>
-                    <div class="card-body d-flex justify-content-center align-items-center">
-                        <img src="./image/aqi_Categories.png"
-                            style="max-width: 100%; height: auto; object-fit: contain;" alt="Biểu đồ AQI">
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
-
-    <div class="row mt-2">
-        <div class="col-md-6">
-            <div class="card h-100">
-                <div class="card-header bg-white border-0 pt-4 px-4">
-                    <span><i class="bi bi-bar-chart-line text-success"></i> Biểu đồ trung bình theo tháng và
-                        giờ</span>
-                </div>
-                <div class="card-body">
-                    <img src="./image/aqi_AverageByMothnAndHour1.png"
-                        style="max-width: 100%; height: auto; object-fit: contain;" alt="Biểu đồ AQI">
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card h-100">
-                <div class="card-header bg-white border-0 pt-4 px-4">
-                    <span><i class="bi bi-activity text-purple"></i>Biểu đồ theo mùa vụ</span>
-                </div>
-                <img src="./image/SeasonalTrend.png" style="max-width: 100%; height: auto; object-fit: contain;"
-                    alt="Biểu đồ AQI">
-            </div>
-            <div class="card-footer bg-white border-0 d-flex justify-content-around pb-4">
-                <div class="text-center">
-                    <h5 class="mb-0 fw-bold">$218</h5>
-                    <small class="text-muted">Avg Order Value</small>
-                </div>
-                <div class="text-center">
-                    <h5 class="mb-0 fw-bold">48.3K</h5>
-                    <small class="text-muted">Units Sold</small>
-                </div>
-            </div>
-        </div>
-    </div>
-    </div>
-
+    <!-- vẽ biểu đồ ô nhiễm không khí tất cả các chỉ số  -->
     <div class="card race-chart-card shadow-sm border-0 mb-4">
         <div class="card-header bg-white border-0 pt-4 px-4">
             <div class="d-flex align-items-center">
@@ -374,7 +337,7 @@
 
         </div>
     </div>
-
+    <!-- giao diện chat box -->
     <div class="chat-launcher" onclick="toggleChat()">
         <i class="bi bi-chat-dots-fill fs-3"></i>
     </div>
@@ -460,11 +423,8 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
     </script>
-    <script src="index.js"></script>
+    <script src="./index.js"></script>
 
-</body>
-
-</html>
 </body>
 
 </html>
