@@ -1,5 +1,5 @@
 /* =========================================
-   PHẦN 1: CHATBOT LOGIC
+PHẦN 1: CHATBOT LOGIC
    ========================================= */
 function toggleChat() {
     const chatWindow = document.getElementById('chatWindow');
