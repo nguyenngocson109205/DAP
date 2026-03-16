@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./style_index.css">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
 
@@ -38,12 +38,12 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link fw-bold" href="wind.html">
-                            <i class="bi bi-compass me-1"></i> Phân tích Khí hậu
+                        <a class="nav-link fw-bold" href="forecast.html">
+                            <i class="bi bi-compass me-1"></i> Dự đoán ô nhiễm không khí
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link fw-bold" href="wind.html">
+                        <a class="nav-link fw-bold" href="analysis.html">
                             <i class="bi bi-compass me-1"></i> Phân tích Khí hậu
                         </a>
                     </li>
@@ -62,6 +62,12 @@
                         </a>
                     </li>
 
+                    <li class="nav-item ms-lg-2" id="nav-user-info" style="display: none;">
+                        <span class="nav-link fw-bold text-dark">
+                            <i class="bi bi-person-circle text-primary me-1"></i> <span id="displayUserName">User</span>
+                        </span>
+                    </li>
+
                     <li class="nav-item" id="nav-logout" style="display: none;">
                         <a class="nav-link fw-bold text-danger" href="#" onclick="handleLogout(event)">
                             <i class="bi bi-box-arrow-right me-1"></i> Đăng xuất
@@ -72,9 +78,6 @@
             </div>
         </div>
     </nav>
-    <!--  -->
-
-
     <div class="container-fluid p-4">
 
         <div class="card mb-4">
@@ -163,6 +166,64 @@
                         </div>
                     </div>
 
+                    <!--  -->
+                    <div id="hero-section" class="position-relative d-flex align-items-center justify-content-center"
+                        style="min-height: 70vh; background: url('https://images.unsplash.com/photo-1583417319070-4a69db38a482?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat; overflow: hidden; margin-bottom: 2rem;">
+
+                        <div id="hero-overlay" class="position-absolute w-100 h-100"
+                            style="background: rgba(15, 23, 42, 0.6); transition: backdrop-filter 0.5s ease;"></div>
+
+                        <div class="container position-relative z-3 text-center text-white px-4">
+                            <h1 class="display-5 fw-bold mb-3" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Không khí
+                                bạn hít thở hôm
+                                nay ra sao?</h1>
+                            <p class="lead mb-4" style="text-shadow: 0 1px 3px rgba(0,0,0,0.5);">Hệ thống AI giám sát &
+                                cảnh báo mức độ
+                                ô nhiễm tại TP.HCM theo thời gian thực</p>
+
+                            <div class="row justify-content-center">
+                                <div class="col-md-8 col-lg-6">
+                                    <div class="input-group input-group-lg shadow-lg"
+                                        style="border-radius: 50px; overflow: hidden;">
+                                        <span class="input-group-text bg-white border-0 text-primary px-4"><i
+                                                class="bi bi-geo-alt-fill fs-5"></i></span>
+                                        <select class="form-select border-0 fs-5 py-3" id="districtSearch"
+                                            style="cursor: pointer; box-shadow: none;">
+                                            <option value="" selected disabled>Chọn khu vực của bạn để kiểm tra...
+                                            </option>
+                                            <option value="q1">Quận 1 - Trung tâm</option>
+                                            <option value="q2">Quận 2 - TP. Thủ Đức</option>
+                                            <option value="tb">Quận Tân Bình</option>
+                                            <option value="gv">Quận Gò Vấp</option>
+                                            <option value="q7">Quận 7 - Nam Sài Gòn</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="quickSummaryCard" class="card mt-4 mx-auto text-start border-0 shadow-lg d-none"
+                                style="max-width: 550px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 16px; transform: translateY(30px); opacity: 0; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);">
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h4 class="fw-bold mb-0 text-dark" id="qsDistrictName">Quận 1</h4>
+                                        <span class="badge rounded-pill px-3 py-2 shadow-sm" id="qsAqiBadge"
+                                            style="font-size: 1rem;">AQI: ---</span>
+                                    </div>
+                                    <h3 class="fw-bold mb-1" id="qsStatusColor">Đang tải...</h3>
+                                    <p class="text-secondary mb-3 fw-medium" id="qsPm25Text">Bụi mịn PM2.5: -- µg/m³</p>
+
+                                    <div class="alert mb-0 border-0 fw-medium" id="qsAdvice"
+                                        style="border-radius: 10px;">
+                                        <i class="bi bi-info-circle-fill me-2"></i> Vui lòng chọn khu vực để xem khuyến
+                                        cáo.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--  -->
+
+
                     <div class="card mb-4 border-0 shadow-sm">
                         <div class="card-body">
                             <div class="row g-3">
@@ -196,261 +257,165 @@
                         </div>
                     </div>
 
-                    <div class="card border-0 shadow-sm">
+                    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+                    <div class="card border-0 shadow-sm mt-4">
                         <div class="card-header bg-white border-0">
                             <h5 class="fw-bold text-success" id="chartTitle">Kết quả hiển thị</h5>
                         </div>
-                        <div class="card-body" id="chartContainer">
-                            <p class="text-center text-muted py-5">Vui lòng chọn bộ lọc và bấm nút...</p>
+                        <div class="card-body" id="chartContainer" style="height: 400px;">
+                            <canvas id="myChart"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- dự đoán chấty lượng không khí -->
-        <div class="row mt-4 mb-4">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm card-ai-forecast" style="border-left: 5px solid #6610f2;">
-                    <div
-                        class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+
+        <!-- vẽ biểu đồ ô nhiễm không khí tất cả các chỉ số  -->
+        <div class="card race-chart-card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box-purple me-3">
+                            <i class="bi bi-speedometer2"></i>
+                        </div>
                         <div>
-                            <h5 class="fw-bold mb-0">
-                                <i class="bi bi-magic me-2" style="color: #6610f2;"></i>AI Revenue Forecast
-                            </h5>
-                            <small class="text-muted">Dự báo pm2.5 10 giờ tới</small>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <select class="form-select form-select-sm" id="modelSelect">
-                                <option value="gru">LSTM (Deep Learning)</option>
-                                <option value="xgboost">XGBoost (Machine Learning)</option>
-                            </select>
-
-                            <button class="btn btn-primary btn-sm px-3" onclick="runPrediction()">
-                                <i class="bi bi-cpu-fill me-1"></i> Dự báo ngay
-                            </button>
+                            <h5 class="fw-bold mb-0">Diễn biến Ô nhiễm 2023 - 2025</h5>
                         </div>
                     </div>
 
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-9">
-                                <canvas id="predictionChart" height="100"></canvas>
-                            </div>
+                    <button id="btnPlayRace" class="btn text-white shadow-sm fw-bold px-4"
+                        style="background-color: #6f42c1; border-radius: 30px;">
+                        <i class="bi bi-play-fill me-1 fs-5 align-middle"></i> Khởi động Mô phỏng
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
 
-                            <div class="col-md-3 d-flex flex-column justify-content-center border-start">
-                                <div class="mb-4 text-center">
-                                    <small class="text-muted text-uppercase fw-bold">Cao nhất</small>
-                                    <h3 class="fw-bold text-success" id="predMax">---</h3>
-                                </div>
-                                <div class="mb-4 text-center">
-                                    <small class="text-muted text-uppercase fw-bold">Thấp nhất</small>
-                                    <h3 class="fw-bold text-danger" id="predMin">---</h3>
-                                </div>
-                            </div>
-                        </div>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <h6 class="text-center fw-bold" style="color: #dc3545;">Bụi PM2.5</h6>
+                        <div id="race-PM25" class="echart-mini"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-center fw-bold" style="color: #fd7e14;">Bụi PM10</h6>
+                        <div id="race-PM10" class="echart-mini"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-center fw-bold" style="color: #0dcaf0;">Khí NO2</h6>
+                        <div id="race-NO2" class="echart-mini"></div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <h6 class="text-center fw-bold" style="color: #0d6efd;">Khí O3</h6>
+                        <div id="race-O3" class="echart-mini"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-center fw-bold" style="color: #6f42c1;">Khí SO2</h6>
+                        <div id="race-SO2" class="echart-mini"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-center fw-bold" style="color: #198754;">AQI Tổng hợp</h6>
+                        <div id="race-AQI" class="echart-mini"></div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    <!-- vẽ biểu đồ ô nhiễm không khí tất cả các chỉ số  -->
-    <div class="card race-chart-card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white border-0 pt-4 px-4">
-            <div class="d-flex align-items-center">
-                <div class="icon-box-purple me-3">
-                    <i class="bi bi-speedometer2"></i>
-                </div>
-                <div>
-                    <h5 class="fw-bold mb-0">Diễn biến Ô nhiễm 2023 - 2025</h5>
+
+                <div class="mt-4 chart-note text-center d-block">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <span>Dữ liệu được mô phỏng chạy trong 10 giây. Tốc độ tăng trưởng hiển thị ở cuối đường.</span>
                 </div>
             </div>
         </div>
-        <div class="card-body">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0 text-info">
+                    <i class="bi bi-grid-3x3-gap-fill"></i> Phân tích Gió theo Mùa & Năm
+                </h5>
+                <small class="text-muted">So sánh Tháng 1 (Mùa khô), Tháng 6 (Mùa mưa), Tháng 12 (Cuối năm)</small>
+            </div>
+            <div class="card-body">
 
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <h6 class="text-center fw-bold" style="color: #dc3545;">Bụi PM2.5</h6>
-                    <div id="race-PM25" class="echart-mini"></div>
-                </div>
-                <div class="col-md-4">
-                    <h6 class="text-center fw-bold" style="color: #fd7e14;">Bụi PM10</h6>
-                    <div id="race-PM10" class="echart-mini"></div>
-                </div>
-                <div class="col-md-4">
-                    <h6 class="text-center fw-bold" style="color: #0dcaf0;">Khí NO2</h6>
-                    <div id="race-NO2" class="echart-mini"></div>
+                <h6 class="text-primary fw-bold border-bottom pb-2 mt-2"><i class="bi bi-sun"></i> Tháng 1 (Mùa Khô Cao
+                    Điểm)</h6>
+                <div class="row text-center mb-4">
+                    <div class="col-md-4">
+                        <span class="badge bg-light text-dark mb-2">2023</span>
+                        <div id="wind-m1-y2023" class="wind-mini"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-light text-dark mb-2">2024</span>
+                        <div id="wind-m1-y2024" class="wind-mini"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-light text-dark mb-2">2025</span>
+                        <div id="wind-m1-y2025" class="wind-mini"></div>
+                    </div>
                 </div>
 
-                <div class="col-md-4">
-                    <h6 class="text-center fw-bold" style="color: #0d6efd;">Khí O3</h6>
-                    <div id="race-O3" class="echart-mini"></div>
+                <h6 class="text-info fw-bold border-bottom pb-2 mt-2"><i class="bi bi-cloud-rain"></i> Tháng 6 (Mùa Mưa
+                    Bắt
+                    Đầu)</h6>
+                <div class="row text-center mb-4">
+                    <div class="col-md-4">
+                        <span class="badge bg-light text-dark mb-2">2023</span>
+                        <div id="wind-m6-y2023" class="wind-mini"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-light text-dark mb-2">2024</span>
+                        <div id="wind-m6-y2024" class="wind-mini"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-light text-dark mb-2">2025</span>
+                        <div id="wind-m6-y2025" class="wind-mini"></div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <h6 class="text-center fw-bold" style="color: #6f42c1;">Khí SO2</h6>
-                    <div id="race-SO2" class="echart-mini"></div>
+
+                <h6 class="text-success fw-bold border-bottom pb-2 mt-2"><i class="bi bi-snow"></i> Tháng 12 (Gió Mùa
+                    Đông
+                    Bắc)</h6>
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <span class="badge bg-light text-dark mb-2">2023</span>
+                        <div id="wind-m12-y2023" class="wind-mini"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-light text-dark mb-2">2024</span>
+                        <div id="wind-m12-y2024" class="wind-mini"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-light text-dark mb-2">2025</span>
+                        <div id="wind-m12-y2025" class="wind-mini"></div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <h6 class="text-center fw-bold" style="color: #198754;">AQI Tổng hợp</h6>
-                    <div id="race-AQI" class="echart-mini"></div>
-                </div>
+
+            </div>
+        </div>
+        <!-- giao diện chat box -->
+        <div class="chat-launcher" onclick="toggleChat()">
+            <i class="bi bi-chat-dots-fill fs-3"></i>
+        </div>
+
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header">
+                <span><i class="bi bi-robot me-2"></i>AI Assistant</span>
+                <button type="button" class="btn-close btn-close-white" onclick="toggleChat()"></button>
             </div>
 
-            <div class="mt-4 chart-note text-center d-block">
-                <i class="bi bi-info-circle me-1"></i>
-                <span>Dữ liệu được mô phỏng chạy trong 10 giây. Tốc độ tăng trưởng hiển thị ở cuối đường.</span>
-            </div>
-        </div>
-    </div>
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white border-0 pt-4 px-4">
-            <h5 class="fw-bold mb-0 text-info">
-                <i class="bi bi-grid-3x3-gap-fill"></i> Phân tích Gió theo Mùa & Năm
-            </h5>
-            <small class="text-muted">So sánh Tháng 1 (Mùa khô), Tháng 6 (Mùa mưa), Tháng 12 (Cuối năm)</small>
-        </div>
-        <div class="card-body">
-
-            <h6 class="text-primary fw-bold border-bottom pb-2 mt-2"><i class="bi bi-sun"></i> Tháng 1 (Mùa Khô Cao
-                Điểm)</h6>
-            <div class="row text-center mb-4">
-                <div class="col-md-4">
-                    <span class="badge bg-light text-dark mb-2">2023</span>
-                    <div id="wind-m1-y2023" class="wind-mini"></div>
-                </div>
-                <div class="col-md-4">
-                    <span class="badge bg-light text-dark mb-2">2024</span>
-                    <div id="wind-m1-y2024" class="wind-mini"></div>
-                </div>
-                <div class="col-md-4">
-                    <span class="badge bg-light text-dark mb-2">2025</span>
-                    <div id="wind-m1-y2025" class="wind-mini"></div>
-                </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">Xin chào! Tôi có thể giúp gì cho bạn về số liệu hôm nay?</div>
             </div>
 
-            <h6 class="text-info fw-bold border-bottom pb-2 mt-2"><i class="bi bi-cloud-rain"></i> Tháng 6 (Mùa Mưa Bắt
-                Đầu)</h6>
-            <div class="row text-center mb-4">
-                <div class="col-md-4">
-                    <span class="badge bg-light text-dark mb-2">2023</span>
-                    <div id="wind-m6-y2023" class="wind-mini"></div>
-                </div>
-                <div class="col-md-4">
-                    <span class="badge bg-light text-dark mb-2">2024</span>
-                    <div id="wind-m6-y2024" class="wind-mini"></div>
-                </div>
-                <div class="col-md-4">
-                    <span class="badge bg-light text-dark mb-2">2025</span>
-                    <div id="wind-m6-y2025" class="wind-mini"></div>
-                </div>
+            <div class="chat-input-area">
+                <input type="text" id="userInput" class="form-control" placeholder="Hỏi gì đi..."
+                    onkeypress="handleEnter(event)">
+                <button class="btn btn-primary" onclick="sendMessage()">
+                    <i class="bi bi-send-fill"></i>
+                </button>
             </div>
-
-            <h6 class="text-success fw-bold border-bottom pb-2 mt-2"><i class="bi bi-snow"></i> Tháng 12 (Gió Mùa Đông
-                Bắc)</h6>
-            <div class="row text-center">
-                <div class="col-md-4">
-                    <span class="badge bg-light text-dark mb-2">2023</span>
-                    <div id="wind-m12-y2023" class="wind-mini"></div>
-                </div>
-                <div class="col-md-4">
-                    <span class="badge bg-light text-dark mb-2">2024</span>
-                    <div id="wind-m12-y2024" class="wind-mini"></div>
-                </div>
-                <div class="col-md-4">
-                    <span class="badge bg-light text-dark mb-2">2025</span>
-                    <div id="wind-m12-y2025" class="wind-mini"></div>
-                </div>
-            </div>
-
         </div>
-    </div>
-    <!-- giao diện chat box -->
-    <div class="chat-launcher" onclick="toggleChat()">
-        <i class="bi bi-chat-dots-fill fs-3"></i>
-    </div>
-
-    <div class="chat-window" id="chatWindow">
-        <div class="chat-header">
-            <span><i class="bi bi-robot me-2"></i>AI Assistant</span>
-            <button type="button" class="btn-close btn-close-white" onclick="toggleChat()"></button>
-        </div>
-
-        <div class="chat-messages" id="chatMessages">
-            <div class="message bot">Xin chào! Tôi có thể giúp gì cho bạn về số liệu hôm nay?</div>
-        </div>
-
-        <div class="chat-input-area">
-            <input type="text" id="userInput" class="form-control" placeholder="Hỏi gì đi..."
-                onkeypress="handleEnter(event)">
-            <button class="btn btn-primary" onclick="sendMessage()">
-                <i class="bi bi-send-fill"></i>
-            </button>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        // Hàm bật/tắt khung chat (Debug log để kiểm tra)
-        function toggleChat() {
-            console.log("Nút chat đã được bấm!");
-            const chatWindow = document.getElementById('chatWindow');
-            if (chatWindow.style.display === 'none' || chatWindow.style.display === '') {
-                chatWindow.style.display = 'flex';
-                document.getElementById('userInput').focus();
-            } else {
-                chatWindow.style.display = 'none';
-            }
-        }
-
-        // Xử lý phím Enter
-        function handleEnter(e) {
-            if (e.key === 'Enter') sendMessage();
-        }
-
-        // Hàm gửi tin nhắn gọi API
-        async function sendMessage() {
-            const inputField = document.getElementById('userInput');
-            const message = inputField.value.trim();
-            const chatBox = document.getElementById('chatMessages');
-
-            if (message === "") return;
-
-            // Hiện tin nhắn User
-            chatBox.innerHTML += `<div class="message user">${message}</div>`;
-            inputField.value = '';
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            // Hiện trạng thái đang gõ...
-            const loadingId = 'loading-' + Date.now();
-            chatBox.innerHTML += `<div class="message bot" id="${loadingId}">...</div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            try {
-                // Gọi API Flask (Lưu ý: Server Python phải đang chạy)
-                const response = await fetch('http://127.0.0.1:5000/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: message })
-                });
-
-                const data = await response.json();
-                document.getElementById(loadingId).remove();
-
-                if (data.reply) {
-                    chatBox.innerHTML += `<div class="message bot">${data.reply}</div>`;
-                } else {
-                    chatBox.innerHTML += `<div class="message bot text-danger">Lỗi format server</div>`;
-                }
-
-            } catch (error) {
-                if (document.getElementById(loadingId)) document.getElementById(loadingId).remove();
-                console.error('Error:', error);
-                chatBox.innerHTML += `<div class="message bot text-danger">Không kết nối được Server! (Check F12)</div>`;
-            }
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-    </script>
-    <script src="./index.js"></script>
-
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="./index.js"></script>
 </body>
 
 </html>

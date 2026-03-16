@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Predictive Analytics - AQI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .metric-card {
+            border-left: 4px solid;
+        }
+
+        .metric-lstm {
+            border-color: #6610f2;
+        }
+
+        .metric-xgb {
+            border-color: #fd7e14;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg bg-white shadow-sm mb-4">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold text-info" href="index.html">
+                <i class="bi bi-cloud-haze2-fill me-2"></i>AIR Pollution
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link fw-bold" href="index.html">Tổng quan</a></li>
+                    <li class="nav-item"><a class="nav-link active fw-bold text-primary" href="forecast.html"><i
+                                class="bi bi-magic me-1"></i>Dự báo AI</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 pb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-0 text-dark"><i class="bi bi-cpu-fill text-primary me-2"></i>AI Predictive
+                    Analysis</h3>
+                <p class="text-muted mb-0">Hệ thống dự báo nồng độ PM2.5 sử dụng Deep Learning</p>
+            </div>
+            <div class="d-flex gap-3 bg-white p-3 rounded shadow-sm">
+                <select class="form-select border-primary" id="modelSelector" style="width: 200px;">
+                    <option value="lstm">LSTM (Deep Learning)</option>
+                    <option value="gru">GRU (Gated Recurrent Unit)</option>
+                    <option value="xgboost">XGBoost (Baseline)</option>
+                </select>
+                <select class="form-select" id="horizonSelector" style="width: 150px;">
+                    <option value="24">Dự báo 24h tới</option>
+                    <option value="48">Dự báo 48h tới</option>
+                </select>
+                <button class="btn btn-primary fw-bold" id="btnRunPrediction">
+                    <i class="bi bi-play-fill"></i> Chạy Model
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm metric-card metric-lstm mb-3">
+                    <div class="card-body">
+                        <p class="text-muted mb-1 fw-bold fs-6">Sai số bình phương (RMSE)</p>
+                        <h2 class="fw-bold text-dark mb-0" id="valRMSE">4.25 <span
+                                class="fs-6 fw-normal text-muted">µg/m³</span></h2>
+                        <small class="text-success"><i class="bi bi-arrow-down"></i> Tốt nhất</small>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm metric-card metric-lstm mb-3">
+                    <div class="card-body">
+                        <p class="text-muted mb-1 fw-bold fs-6">Sai số tuyệt đối (MAE)</p>
+                        <h2 class="fw-bold text-dark mb-0" id="valMAE">3.12 <span
+                                class="fs-6 fw-normal text-muted">µg/m³</span></h2>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm metric-card metric-lstm">
+                    <div class="card-body">
+                        <p class="text-muted mb-1 fw-bold fs-6">Độ chính xác (R² Score)</p>
+                        <h2 class="fw-bold text-dark mb-0" id="valR2">0.92 <span
+                                class="fs-6 fw-normal text-muted">%</span></h2>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3 border-0 shadow-sm">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    <span id="aiInsight">Mô hình LSTM đang bắt được tốt xu hướng tăng nồng độ bụi vào giờ cao điểm sáng
+                        mai.</span>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between">
+                        <h5 class="fw-bold mb-0" id="chartMainTitle">Biểu đồ So sánh: Thực tế vs Dự báo</h5>
+                        <span
+                            class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3"
+                            id="statusBadge">Model Ready</span>
+                    </div>
+                    <div class="card-body p-4" style="min-height: 500px;">
+                        <canvas id="aiForecastChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="forecast.js"></script>
+</body>
+
+</html>

@@ -1,7 +1,163 @@
 /* =========================================
-PHẦN 1: CHATBOT LOGIC
+   1. LOGIC NAVBAR - ĐĂNG NHẬP / ĐĂNG XUẤT
    ========================================= */
-function toggleChat() {
+window.handleLogout = function (event) {
+    if (event) event.preventDefault();
+    localStorage.removeItem('form_data');
+    window.location.reload();
+};
+
+document.addEventListener('DOMContentLoaded', function () {
+    const navLogin = document.getElementById('nav-login');
+    const navRegister = document.getElementById('nav-register');
+    const navLogout = document.getElementById('nav-logout');
+    const navUserInfo = document.getElementById('nav-user-info');
+    const displayUserName = document.getElementById('displayUserName');
+
+    // VŨ KHÍ MỚI: Tự động "lột sạch" các style inline (như display: none) lỡ quên xóa trong HTML
+    [navLogin, navRegister, navLogout, navUserInfo].forEach(el => {
+        if (el) el.removeAttribute('style');
+    });
+
+    const rawData = localStorage.getItem('form_data');
+
+    if (rawData) {
+        let displayName = "User";
+        try {
+            if (rawData.includes('{')) {
+                const parsedData = JSON.parse(rawData);
+                displayName = parsedData.name || "User";
+            } else {
+                displayName = rawData;
+            }
+        } catch (e) {
+            console.log("Lỗi parse data:", e);
+        }
+
+        // --- NẾU ĐÃ ĐĂNG NHẬP ---
+        if (navLogin) navLogin.classList.add('hide-nav-item');
+        if (navRegister) navRegister.classList.add('hide-nav-item');
+
+        if (navUserInfo) {
+            navUserInfo.classList.remove('hide-nav-item');
+            if (displayUserName) displayUserName.innerText = displayName;
+        }
+        if (navLogout) navLogout.classList.remove('hide-nav-item');
+
+    } else {
+        // --- NẾU CHƯA ĐĂNG NHẬP ---
+        if (navLogin) navLogin.classList.remove('hide-nav-item');
+        if (navRegister) navRegister.classList.remove('hide-nav-item');
+
+        if (navUserInfo) navUserInfo.classList.add('hide-nav-item');
+        if (navLogout) navLogout.classList.add('hide-nav-item');
+    }
+});
+
+/* =========================================
+   2. HERO SECTION - TRA CỨU NHANH API
+   ========================================= */
+document.addEventListener('DOMContentLoaded', function () {
+    const searchDropdown = document.getElementById('districtSearch');
+    const overlay = document.getElementById('hero-overlay');
+    const summaryCard = document.getElementById('quickSummaryCard');
+
+    const locations = {
+        'q1': { lat: 10.7756, lon: 106.7019, name: 'Khu vực: Quận 1' },
+        'q2': { lat: 10.7872, lon: 106.7495, name: 'Khu vực: Quận 2' },
+        'tb': { lat: 10.8015, lon: 106.6526, name: 'Khu vực: Tân Bình' },
+        'gv': { lat: 10.8281, lon: 106.6734, name: 'Khu vực: Gò Vấp' },
+        'q7': { lat: 10.7339, lon: 106.7265, name: 'Khu vực: Quận 7' }
+    };
+
+    const apiCache = {};
+
+    if (!searchDropdown) return;
+
+    searchDropdown.addEventListener('change', async function () {
+        const val = this.value;
+        const loc = locations[val];
+        if (!loc) return;
+
+        document.getElementById('qsDistrictName').innerText = loc.name;
+        document.getElementById('qsStatusColor').innerText = "Đang xử lý...";
+        document.getElementById('qsStatusColor').style.color = '#6c757d';
+        document.getElementById('qsPm25Text').innerHTML = `<span class="spinner-border spinner-border-sm"></span> Đang kết nối...`;
+
+        overlay.style.backdropFilter = 'blur(8px)';
+        summaryCard.classList.remove('d-none');
+        setTimeout(() => {
+            summaryCard.style.transform = 'translateY(0)';
+            summaryCard.style.opacity = '1';
+        }, 50);
+
+        try {
+            let pm25, aqi, temp;
+
+            if (apiCache[val]) {
+                pm25 = apiCache[val].pm25;
+                aqi = apiCache[val].aqi;
+                temp = apiCache[val].temp;
+            } else {
+                const api_AirQuality = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${loc.lat}&longitude=${loc.lon}&current=pm2_5,european_aqi`;
+                const api_Weather = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m`;
+
+                const [resAir, resWeather] = await Promise.all([
+                    fetch(api_AirQuality),
+                    fetch(api_Weather)
+                ]);
+
+                const dataAir = await resAir.json();
+                const dataWeather = await resWeather.json();
+
+                pm25 = dataAir.current.pm2_5;
+                aqi = dataAir.current.european_aqi;
+                temp = dataWeather.current.temperature_2m;
+
+                apiCache[val] = { pm25: pm25, aqi: aqi, temp: temp };
+            }
+
+            let status, color, bgBadge, advice, alertClass;
+
+            if (pm25 <= 15) {
+                status = 'Tốt (Good)'; color = '#198754'; bgBadge = 'bg-success text-white'; alertClass = 'alert-success text-success';
+                advice = 'Không khí trong lành. Rất thích hợp để tập thể dục và hít thở.';
+            } else if (pm25 <= 35) {
+                status = 'Trung bình (Moderate)'; color = '#fd7e14'; bgBadge = 'bg-warning text-dark'; alertClass = 'alert-warning text-dark';
+                advice = 'Nhóm nhạy cảm nên hạn chế hoạt động ngoài trời.';
+            } else if (pm25 <= 75) {
+                status = 'Kém (Unhealthy)'; color = '#dc3545'; bgBadge = 'bg-danger text-white'; alertClass = 'alert-danger text-danger';
+                advice = 'Khuyên dùng khẩu trang y tế/N95 khi ra đường. Hạn chế mở cửa sổ.';
+            } else {
+                status = 'Rất Kém (Nguy hiểm)'; color = '#6f42c1'; bgBadge = 'bg-danger text-white'; alertClass = 'alert-danger text-danger';
+                advice = 'Cực kỳ độc hại! Tuyệt đối tránh các hoạt động thể thao ngoài trời.';
+            }
+
+            document.getElementById('qsAqiBadge').className = `badge rounded-pill px-3 py-2 shadow-sm ${bgBadge}`;
+            document.getElementById('qsAqiBadge').innerText = `AQI: ${aqi}`;
+            document.getElementById('qsStatusColor').innerText = status;
+            document.getElementById('qsStatusColor').style.color = color;
+
+            let pmText = `Bụi mịn PM2.5: <b>${pm25} µg/m³</b>`;
+            if (pm25 > 15) pmText += ` (Vượt ${(pm25 / 15).toFixed(1)} lần chuẩn WHO)`;
+            else pmText += ` (Đạt chuẩn an toàn)`;
+
+            document.getElementById('qsPm25Text').innerHTML = `${pmText} <br/> <i class="bi bi-thermometer-sun text-warning mt-1"></i> Nhiệt độ: <b>${temp}°C</b>`;
+            document.getElementById('qsAdvice').className = `alert mb-0 border-0 fw-medium ${alertClass}`;
+            document.getElementById('qsAdvice').innerHTML = `<i class="bi bi-info-circle-fill me-2"></i> ${advice}`;
+
+        } catch (error) {
+            console.error("Lỗi khi gọi API:", error);
+            document.getElementById('qsStatusColor').innerText = "Mất kết nối!";
+        }
+    });
+});
+
+
+/* =========================================
+   3. CHATBOT LOGIC
+   ========================================= */
+window.toggleChat = function () {
     const chatWindow = document.getElementById('chatWindow');
     if (chatWindow.style.display === 'none' || chatWindow.style.display === '') {
         chatWindow.style.display = 'flex';
@@ -11,11 +167,11 @@ function toggleChat() {
     }
 }
 
-function handleEnter(e) {
+window.handleEnter = function (e) {
     if (e.key === 'Enter') sendMessage();
 }
 
-async function sendMessage() {
+window.sendMessage = async function () {
     const inputField = document.getElementById('userInput');
     const message = inputField.value.trim();
     const chatBox = document.getElementById('chatMessages');
@@ -36,7 +192,8 @@ async function sendMessage() {
             body: JSON.stringify({ message: message })
         });
         const data = await response.json();
-        document.getElementById(loadingId).remove();
+        const loader = document.getElementById(loadingId);
+        if (loader) loader.remove();
 
         if (data.reply) {
             chatBox.innerHTML += `<div class="message bot">${data.reply}</div>`;
@@ -44,234 +201,171 @@ async function sendMessage() {
             chatBox.innerHTML += `<div class="message bot text-danger">Lỗi format server</div>`;
         }
     } catch (error) {
-        if (document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+        const loader = document.getElementById(loadingId);
+        if (loader) loader.remove();
         chatBox.innerHTML += `<div class="message bot text-danger">Mất kết nối server!</div>`;
     }
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+
 /* =========================================
-PHẦN 2: AI FORECAST LOGIC (ĐÃ KẾT NỐI API THẬT)
+   4. VẼ BIỂU ĐỒ TỪ API VỆ TINH (Dashboard)
    ========================================= */
+let myChartInstance = null;
 
-let predictionChartInstance = null;
+window.handleFilterChange = function () {
+    document.getElementById('btnRender').click();
+};
 
-// Hàm chạy dự báo (Gọi API Python)
-async function runPrediction() {
-    const modelSelect = document.getElementById('modelSelect');
-    const modelType = modelSelect ? modelSelect.value : 'gru';
-
-    // 1. Hiển thị trạng thái đang tải
-    const trendEl = document.getElementById('predTrend');
-    if (trendEl) {
-        trendEl.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang tính toán...';
-        trendEl.className = "badge bg-warning text-dark px-3 py-2 rounded-pill";
-    }
-
-    try {
-        // 2. GỌI API BACKEND (Cái mà bạn vừa viết xong)
-        const response = await fetch('http://127.0.0.1:5000/predict', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model: modelType })
-        });
-
-        const data = await response.json();
-
-        if (data.error) {
-            alert("Lỗi từ Server: " + data.error);
-            return;
-        }
-
-        // 3. LẤY DỮ LIỆU THẬT TỪ AI
-        const predictedData = data.prediction; // Mảng 24 số thực
-        const labels = Array.from({ length: 24 }, (_, i) => `${i + 1}h`);
-
-        // 4. CẬP NHẬT GIAO DIỆN
-        const maxVal = Math.max(...predictedData);
-        const minVal = Math.min(...predictedData);
-
-        document.getElementById('predMax').innerText = `$${maxVal.toFixed(1)}K`;
-        document.getElementById('predMin').innerText = `$${minVal.toFixed(1)}K`;
-
-        // Logic xu hướng (So sánh giờ cuối vs giờ đầu)
-        if (predictedData[predictedData.length - 1] > predictedData[0]) {
-            trendEl.innerHTML = '<i class="bi bi-arrow-up-right"></i> Đang tăng';
-            trendEl.className = "badge badge-trend-up px-3 py-2 rounded-pill";
-        } else {
-            trendEl.innerHTML = '<i class="bi bi-arrow-down-right"></i> Đang giảm';
-            trendEl.className = "badge badge-trend-down px-3 py-2 rounded-pill";
-        }
-
-        // 5. VẼ BIỂU ĐỒ
-        const ctx = document.getElementById('predictionChart');
-        if (predictionChartInstance) {
-            predictionChartInstance.destroy();
-        }
-
-        predictionChartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: `Dự báo (${modelType.toUpperCase()})`,
-                        data: predictedData,
-                        borderColor: '#6610f2',
-                        backgroundColor: 'rgba(102, 16, 242, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 4
-                    },
-                    {
-                        label: 'Thực tế (Tham chiếu)',
-                        // Tạo đường tham chiếu giả định để so sánh cho đẹp
-                        data: predictedData.map(x => x * (0.9 + Math.random() * 0.2)),
-                        borderColor: '#adb5bd',
-                        borderWidth: 2,
-                        borderDash: [5, 5],
-                        tension: 0.4,
-                        fill: false,
-                        pointRadius: 0
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'top' },
-                    tooltip: { mode: 'index', intersect: false }
-                },
-                interaction: { mode: 'nearest', axis: 'x', intersect: false },
-                scales: {
-                    y: { beginAtZero: true, grid: { borderDash: [2, 4] } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-
-    } catch (error) {
-        console.error("Lỗi:", error);
-        if (trendEl) {
-            trendEl.innerHTML = '❌ Mất kết nối';
-            trendEl.className = "badge bg-danger text-white px-3 py-2 rounded-pill";
-        }
-        alert("Không kết nối được với Server Python! Hãy chắc chắn bạn đã chạy 'python run.py'");
-    }
-}
 document.addEventListener('DOMContentLoaded', function () {
+    const btnRender = document.getElementById('btnRender');
+    if (!btnRender) return;
 
-    // --- 1. KHAI BÁO BIẾN (Lấy các phần tử HTML về trước) ---
-    // Dùng querySelector thì nhớ phải có dấu thăng (#) cho ID nhé
-    const btnRender = document.querySelector('#btnRender');
-    const container = document.querySelector('#chartContainer');
-    const title = document.querySelector('#chartTitle');
+    btnRender.addEventListener('click', async function () {
+        const metricSelect = document.getElementById('filterMetric');
+        const timeSelect = document.getElementById('filterTime');
 
-    // Lấy 2 ô select
-    const selectMetric = document.querySelector('#filterMetric');
-    const selectTime = document.querySelector('#filterTime');
+        const metricValue = metricSelect.value;
+        const timeRange = timeSelect.value;
 
-    // --- 2. GẮN SỰ KIỆN (Add Event Listener) ---
-    // Bây giờ gọi tên biến là được, không cần gõ lại document.querySelector...
-    btnRender.addEventListener('click', function () {
+        const metricLabel = metricSelect.options[metricSelect.selectedIndex].text;
+        const timeLabel = timeSelect.options[timeSelect.selectedIndex].text;
 
-        // Lấy giá trị hiện tại (value) của 2 ô select khi bấm nút
-        const metricValue = selectMetric.value;
-        const timeValue = selectTime.value;
+        document.getElementById('chartTitle').innerText = `Đang tải dữ liệu từ vệ tinh...`;
 
-        console.log(`Đang xử lý: ${metricValue} - ${timeValue}`);
+        try {
+            const today = new Date();
+            const endDate = today.toISOString().split('T')[0];
 
-        // --- 3. XỬ LÝ GIAO DIỆN (Logic Xóa cũ - Thêm mới) ---
+            let startDate = new Date();
+            let pastDays = 1;
 
-        // B1: Xóa sạch cái cũ
-        container.innerHTML = '';
+            if (timeRange === '7d') pastDays = 7;
+            if (timeRange === '1m') pastDays = 30;
 
-        // B2: Tạo thẻ Canvas mới
-        const newCanvas = document.createElement('canvas');
-        newCanvas.id = 'dynamicChart';
-        newCanvas.style.maxHeight = '400px';
+            startDate.setDate(today.getDate() - pastDays);
+            const startDateString = startDate.toISOString().split('T')[0];
 
-        // B3: Nhét vào khung
-        container.appendChild(newCanvas);
+            const lat = 10.7756;
+            const lon = 106.7019;
+            const apiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&start_date=${startDateString}&end_date=${endDate}&hourly=pm10,pm2_5,european_aqi&timezone=Asia/Bangkok`;
 
-        // B4: Vẽ
-        updateTitle(metricValue, timeValue); // Cập nhật tiêu đề
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error("Mất kết nối API");
+            const rawData = await response.json();
 
-        // Điều hướng vẽ biểu đồ nào
-        if (metricValue === 'pm25') {
-            drawChartPM25(newCanvas, timeValue);
-        } else if (metricValue === 'pm10') {
-            drawChartPM10(newCanvas, timeValue);
-        } else {
-            drawChartAQI(newCanvas, timeValue);
+            const hourlyData = rawData.hourly;
+            let labels = [];
+            let values = [];
+            let chartColor = '#198754';
+
+            let metricArray = hourlyData.european_aqi;
+            if (metricValue === 'pm25') {
+                metricArray = hourlyData.pm2_5;
+                chartColor = '#fd7e14';
+            } else if (metricValue === 'pm10') {
+                metricArray = hourlyData.pm10;
+                chartColor = '#0dcaf0';
+            }
+
+            if (timeRange === '24h') {
+                labels = hourlyData.time.slice(-24).map(t => t.substring(11, 16));
+                values = metricArray.slice(-24);
+            } else {
+                let dailyData = {};
+                for (let i = 0; i < hourlyData.time.length; i++) {
+                    const dateOnly = hourlyData.time[i].substring(5, 10);
+                    if (!dailyData[dateOnly]) dailyData[dateOnly] = { sum: 0, count: 0 };
+                    dailyData[dateOnly].sum += metricArray[i];
+                    dailyData[dateOnly].count += 1;
+                }
+                labels = Object.keys(dailyData);
+                values = labels.map(day => (dailyData[day].sum / dailyData[day].count).toFixed(1));
+            }
+
+            const ctx = document.getElementById('myChart').getContext('2d');
+            if (myChartInstance) myChartInstance.destroy();
+
+            myChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `Chỉ số ${metricLabel}`,
+                        data: values,
+                        borderColor: chartColor,
+                        backgroundColor: chartColor + '33',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: timeRange === '24h' ? 3 : 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            document.getElementById('chartTitle').innerText = `Biểu đồ ${metricLabel} - ${timeLabel}`;
+
+        } catch (error) {
+            console.error("Lỗi vẽ biểu đồ:", error);
+            document.getElementById('chartTitle').innerText = "Lỗi kết nối máy chủ dữ liệu!";
         }
     });
-
 });
 
-// --- CÁC HÀM VẼ (Giữ nguyên như cũ) ---
-function updateTitle(metric, time) {
-    // Logic đổi tên tiêu đề...
-    if (title) title.innerText = `Kết quả: ${metric} (${time})`;
-}
 
-function drawChartPM25(canvas, time) {
-    // Code vẽ chart...
-    new Chart(canvas, {
-        type: 'line',
-        data: {
-            labels: ['1h', '2h', '3h', '4h', '5h'],
-            datasets: [{
-                label: 'PM2.5 Demo',
-                data: [10, 20, 15, 30, 25],
-                borderColor: 'red'
-            }]
-        }
-    });
-}
-
-function drawChartPM10(canvas, time) {
-    // Code vẽ chart...
-    new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels: ['Khu A', 'Khu B'],
-            datasets: [{
-                label: 'PM10 Demo',
-                data: [50, 80],
-                backgroundColor: 'blue'
-            }]
-        }
-    });
-}
-
-function drawChartAQI(canvas, time) {
-    // Code vẽ chart...
-    new Chart(canvas, {
-        type: 'doughnut',
-        data: {
-            labels: ['Tốt', 'Xấu'],
-            datasets: [{
-                data: [70, 30],
-                backgroundColor: ['green', 'orange']
-            }]
-        }
-    });
-}
-
+/* =========================================
+   5. MÔ PHỎNG ĐUA BIỂU ĐỒ (RACE CHARTS)
+   ========================================= */
 document.addEventListener('DOMContentLoaded', function () {
     const DATA_URL = './data/hcm_aqi_dataset.json';
+    let chartInstances = [];
+    let cachedRawData = null;
 
-    $.get(DATA_URL, function (_rawData) {
-        render6MiniCharts(_rawData);
+    const btnPlay = document.getElementById('btnPlayRace');
+    if (!btnPlay) return;
+
+    btnPlay.addEventListener('click', function () {
+        btnPlay.innerHTML = '<span class="spinner-grow spinner-grow-sm me-2 align-middle"></span> Đang chạy...';
+        btnPlay.style.opacity = '0.8';
+        btnPlay.disabled = true;
+
+        chartInstances.forEach(chart => chart.dispose());
+        chartInstances = [];
+
+        if (cachedRawData) {
+            render6MiniCharts(cachedRawData);
+            unlockButtonLater();
+        } else {
+            $.get(DATA_URL, function (_rawData) {
+                cachedRawData = _rawData;
+                render6MiniCharts(_rawData);
+                unlockButtonLater();
+            }).fail(function () {
+                alert("Không tìm thấy file JSON data!");
+                btnPlay.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i> Lỗi dữ liệu';
+            });
+        }
     });
 
-    const chartInstances = [];
+    function unlockButtonLater() {
+        setTimeout(() => {
+            btnPlay.innerHTML = '<i class="bi bi-arrow-counterclockwise me-1 fs-5 align-middle"></i> Chạy lại lần nữa';
+            btnPlay.style.opacity = '1';
+            btnPlay.disabled = false;
+        }, 20000);
+    }
 
     function render6MiniCharts(_rawData) {
-        // Cấu hình ID, màu sắc và NGƯỠNG AN TOÀN WHO (Đường đỏ)
         const chartConfigs = [
             { indicator: 'PM2.5', id: 'race-PM25', color: '#dc3545', threshold: 15 },
             { indicator: 'PM10', id: 'race-PM10', color: '#fd7e14', threshold: 45 },
@@ -293,19 +387,14 @@ document.addEventListener('DOMContentLoaded', function () {
             const colIndex = header.indexOf(config.indicator);
 
             const option = {
-                // Tăng thời gian đua lên 20s vì giờ có tới 36 tháng (rất nhiều điểm dữ liệu)
                 animationDuration: 20000,
                 dataset: { source: _rawData },
                 tooltip: { trigger: 'axis' },
-                grid: {
-                    top: 25, bottom: 25, left: 35, right: 60 // Chừa chỗ bên phải cho chữ
-                },
+                grid: { top: 25, bottom: 25, left: 35, right: 60 },
                 xAxis: {
                     type: 'category',
-                    // ECharts sẽ tự động lấy dữ liệu từ cột 'Month' để làm trục X
                     axisLabel: {
                         formatter: function (value) {
-                            // Cắt bớt chữ, ví dụ "2023-01" -> "01/23" cho gọn
                             if (!value) return '';
                             const parts = value.split('-');
                             return parts.length === 2 ? `${parts[1]}/${parts[0].substring(2)}` : value;
@@ -319,45 +408,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 series: [{
                     type: 'line',
                     name: config.indicator,
-                    encode: {
-                        x: 'Month', // TRỤC X LÀ THÁNG
-                        y: config.indicator
-                    },
+                    encode: { x: 'Month', y: config.indicator },
                     showSymbol: false,
                     lineStyle: { width: 3, color: config.color },
                     itemStyle: { color: config.color },
-
-                    // --- THÊM ĐƯỜNG ĐỎ CẢNH BÁO WHO ---
                     markLine: {
-                        symbol: ['none', 'none'], // Không có mũi tên ở 2 đầu
-                        label: {
-                            show: true,
-                            position: 'end',
-                            formatter: 'WHO: {c}', // Hiển thị chữ "WHO: số"
-                            color: 'red',
-                            fontSize: 10,
-                            fontWeight: 'bold'
-                        },
-                        lineStyle: {
-                            color: 'red',
-                            type: 'dashed',
-                            width: 1.5
-                        },
-                        data: [
-                            { yAxis: config.threshold } // Lấy ngưỡng từ cấu hình trên
-                        ]
+                        symbol: ['none', 'none'],
+                        label: { show: true, position: 'end', formatter: 'WHO: {c}', color: 'red', fontSize: 10, fontWeight: 'bold' },
+                        lineStyle: { color: 'red', type: 'dashed', width: 1.5 },
+                        data: [{ yAxis: config.threshold }]
                     },
-                    // ----------------------------------
-
                     endLabel: {
                         show: true,
                         formatter: function (params) {
                             let val = params.value[colIndex];
                             return val ? Number(val).toFixed(1) : '';
                         },
-                        fontSize: 12,
-                        fontWeight: 'bold',
-                        color: config.color
+                        fontSize: 12, fontWeight: 'bold', color: config.color
                     }
                 }]
             };
@@ -371,14 +438,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// Thay vì viết cứng dữ liệu, giờ ta gọi API lấy file JSON vừa tạo
-document.addEventListener('DOMContentLoaded', function () {
 
-    const windInstances = []; // Lưu lại để resize
+/* =========================================
+   6. BIỂU ĐỒ HOA GIÓ (WIND ROSE CHARTS)
+   ========================================= */
+document.addEventListener('DOMContentLoaded', function () {
+    const windInstances = [];
 
     $.get('./data/hcm_wind_dataset.json', function (data) {
-
-        // Danh sách các mục tiêu cần vẽ (Khớp với ID trong HTML)
         const targets = [
             { m: 1, y: 2023 }, { m: 1, y: 2024 }, { m: 1, y: 2025 },
             { m: 6, y: 2023 }, { m: 6, y: 2024 }, { m: 6, y: 2025 },
@@ -386,13 +453,10 @@ document.addEventListener('DOMContentLoaded', function () {
         ];
 
         targets.forEach(function (target) {
-            // Tạo ID động: wind-m1-y2023
             const domId = `wind-m${target.m}-y${target.y}`;
             const dom = document.getElementById(domId);
+            if (!dom) return;
 
-            if (!dom) return; // Nếu lỡ xóa div nào thì bỏ qua
-
-            // Lấy dữ liệu tương ứng từ JSON
             const key = `m${target.m}_y${target.y}`;
             const chartData = data.grid[key];
 
@@ -400,14 +464,12 @@ document.addEventListener('DOMContentLoaded', function () {
             windInstances.push(myChart);
 
             if (!chartData) {
-                // Nếu không có dữ liệu (ví dụ chưa tới tháng 12/2025)
                 myChart.setOption({
                     title: { text: 'Chưa có dữ liệu', left: 'center', top: 'center', textStyle: { fontSize: 12, color: '#999' } }
                 });
                 return;
             }
 
-            // Tạo các lớp (stack) cho biểu đồ
             const seriesConfig = data.legend.map((name, index) => ({
                 type: 'bar',
                 data: chartData.series_data[index],
@@ -418,20 +480,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const option = {
                 color: ['#a2d2ff', '#5c9ce6', '#2b65bd', '#123473'],
-                tooltip: {
-                    trigger: 'item',
-                    formatter: '{a} <br/>{b}: {c} giờ'
-                },
-                // Legend chỉ hiện ở biểu đồ đầu tiên hoặc tắt đi cho gọn (ở đây mình tắt cho thoáng)
+                tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} giờ' },
                 legend: { show: false },
-                polar: { radius: '65%' }, // Thu nhỏ xíu để không bị cắt chữ
+                polar: { radius: '65%' },
                 angleAxis: {
                     type: 'category',
                     data: data.directions,
                     boundaryGap: false,
                     splitLine: { show: true, lineStyle: { color: '#eee' } },
                     axisLine: { show: false },
-                    axisLabel: { interval: 3, fontSize: 9 } // Chỉ hiện N, E, S, W cho đỡ rối (interval=3)
+                    axisLabel: { interval: 3, fontSize: 9 }
                 },
                 radiusAxis: {
                     type: 'value',
@@ -445,15 +503,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
     }).fail(function () {
-        console.error("Lỗi tải file wind_rose_grid.json");
+        console.error("Lỗi tải file hcm_wind_dataset.json");
     });
 
-    // Resize tất cả 9 biểu đồ khi co giãn màn hình
     window.addEventListener('resize', function () {
         windInstances.forEach(chart => chart.resize());
     });
-});
-// Chạy lần đầu khi load trang
-document.addEventListener('DOMContentLoaded', function () {
-    runPrediction();
 });
