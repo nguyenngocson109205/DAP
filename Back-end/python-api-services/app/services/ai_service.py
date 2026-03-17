@@ -64,6 +64,28 @@ class AIService:
         except Exception as e:
             print(f"Lỗi API Weather: {e}")
             return None
+        
+    def _load_all_models(self):
+        try:
+            # 1. Load LSTM (.h5)
+            lstm_path = os.path.join(self.model_dir, 'lstm_aqi_model.h5')
+            if os.path.exists(lstm_path):
+                self.models['lstm'] = tf.keras.models.load_model(lstm_path)
+            
+            # 2. Load XGBoost (.json hoặc .joblib)
+            # Tùy theo Sơn lưu bằng cách nào, ở đây tui ví dụ dùng joblib
+            xgb_path = os.path.join(self.model_dir, 'xgboost_aqi.joblib')
+            if os.path.exists(xgb_path):
+                self.models['xgboost'] = joblib.load(xgb_path)
+
+            # 3. Load Ridge (.joblib)
+            ridge_path = os.path.join(self.model_dir, 'ridge_aqi.joblib')
+            if os.path.exists(ridge_path):
+                self.models['ridge'] = joblib.load(ridge_path)
+            
+            print("--- Đã load xong 3 Model: LSTM, XGBoost, Ridge ---")
+        except Exception as e:
+            print(f"Lỗi load model: {e}")
 
     def predict_aqi(self, model_type='gru', current_hour=0):
         self.load_resources()

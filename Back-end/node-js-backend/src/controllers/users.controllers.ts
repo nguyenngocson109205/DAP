@@ -22,8 +22,10 @@ export const loginController = async (
 
     return res.status(HTTP_STATUS.OK).json({
         message: USERS_MESSAGES.LOGIN_SUCCESS,
-        result // ac và rf để duy trì đăng nhập
-    })
+        accessToken: result.access_token,   // Đổi tên cho khớp với 'accessToken' ở Front
+        refreshToken: result.refresh_token,
+        user: result.user
+    });
 };
 export const registerController = async (
 

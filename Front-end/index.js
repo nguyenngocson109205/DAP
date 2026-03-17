@@ -3,7 +3,9 @@
    ========================================= */
 window.handleLogout = function (event) {
     if (event) event.preventDefault();
-    localStorage.removeItem('form_data');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
     window.location.reload();
 };
 
@@ -14,27 +16,25 @@ document.addEventListener('DOMContentLoaded', function () {
     const navUserInfo = document.getElementById('nav-user-info');
     const displayUserName = document.getElementById('displayUserName');
 
-    // VŨ KHÍ MỚI: Tự động "lột sạch" các style inline (như display: none) lỡ quên xóa trong HTML
+    // DỌN DẸP STYLE: Xóa sạch style inline lỡ có trong HTML
     [navLogin, navRegister, navLogout, navUserInfo].forEach(el => {
         if (el) el.removeAttribute('style');
     });
 
-    const rawData = localStorage.getItem('form_data');
+    // QUAN TRỌNG: Phải khớp đúng chữ 'accessToken' (T viết hoa)
+    const token = localStorage.getItem('accessToken');
+    const rawUser = localStorage.getItem('user');
 
-    if (rawData) {
+    if (token) {
+        // --- NẾU ĐÃ ĐĂNG NHẬP (CÓ TOKEN) ---
         let displayName = "User";
         try {
-            if (rawData.includes('{')) {
-                const parsedData = JSON.parse(rawData);
-                displayName = parsedData.name || "User";
-            } else {
-                displayName = rawData;
+            if (rawUser) {
+                const parsed = JSON.parse(rawUser);
+                displayName = parsed.name || "User";
             }
-        } catch (e) {
-            console.log("Lỗi parse data:", e);
-        }
+        } catch (e) { console.error(e); }
 
-        // --- NẾU ĐÃ ĐĂNG NHẬP ---
         if (navLogin) navLogin.classList.add('hide-nav-item');
         if (navRegister) navRegister.classList.add('hide-nav-item');
 
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (navLogout) navLogout.classList.remove('hide-nav-item');
 
     } else {
-        // --- NẾU CHƯA ĐĂNG NHẬP ---
+        // --- NẾU CHƯA ĐĂNG NHẬP (TOKEN TRỐNG) ---
         if (navLogin) navLogin.classList.remove('hide-nav-item');
         if (navRegister) navRegister.classList.remove('hide-nav-item');
 
@@ -53,7 +53,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (navLogout) navLogout.classList.add('hide-nav-item');
     }
 });
-
 /* =========================================
    2. HERO SECTION - TRA CỨU NHANH API
    ========================================= */

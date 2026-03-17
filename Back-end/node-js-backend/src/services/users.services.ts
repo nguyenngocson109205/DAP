@@ -111,7 +111,14 @@ class UserServices {
         )
         return {
             access_token,
-            refresh_token
+            refresh_token,
+            // Trả thêm cục user này về nè
+            user: {
+                _id: user._id,
+                name: user.name,  // Đây là cái 'name' mà nãy giờ index.js đi tìm
+                email: user.email
+                // TUYỆT ĐỐI không trả password về đây nhé!
+            }
         }
     }
 
