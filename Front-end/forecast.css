@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #f4f7f9;
+}
+
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05) !important;
+}
+
+.navbar-brand {
+    letter-spacing: -0.5px;
+}
+
+.bg-primary-subtle {
+    background-color: #e7f0ff !important;
+}
+
+.bg-warning-subtle {
+    background-color: #fff8e6 !important;
+}
+
+.bg-success-subtle {
+    background-color: #e6f9f0 !important;
+}
+
+/* Tùy chỉnh biểu đồ */
+#aiForecastChart {
+    filter: drop-shadow(0px 10px 10px rgba(13, 110, 253, 0.05));
+}

@@ -224,9 +224,11 @@ document.addEventListener('DOMContentLoaded', function () {
     btnRender.addEventListener('click', async function () {
         const metricSelect = document.getElementById('filterMetric');
         const timeSelect = document.getElementById('filterTime');
+        const chartTypeSelect = document.getElementById('filterChartType'); // <-- Lấy dropdown mới thêm
 
         const metricValue = metricSelect.value;
         const timeRange = timeSelect.value;
+        const chartType = chartTypeSelect.value; // <-- Lấy giá trị loại biểu đồ (line, bar, pie)
 
         const metricLabel = metricSelect.options[metricSelect.selectedIndex].text;
         const timeLabel = timeSelect.options[timeSelect.selectedIndex].text;
@@ -257,9 +259,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const hourlyData = rawData.hourly;
             let labels = [];
             let values = [];
-            let chartColor = '#198754';
 
+            // Xử lý màu sắc cơ bản cho Line và Bar chart
+            let chartColor = '#198754';
             let metricArray = hourlyData.european_aqi;
+
             if (metricValue === 'pm25') {
                 metricArray = hourlyData.pm2_5;
                 chartColor = '#fd7e14';
@@ -268,6 +272,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 chartColor = '#0dcaf0';
             }
 
+            // Xử lý dữ liệu theo thời gian (24h hoặc gom nhóm theo ngày)
             if (timeRange === '24h') {
                 labels = hourlyData.time.slice(-24).map(t => t.substring(11, 16));
                 values = metricArray.slice(-24);
@@ -283,29 +288,49 @@ document.addEventListener('DOMContentLoaded', function () {
                 values = labels.map(day => (dailyData[day].sum / dailyData[day].count).toFixed(1));
             }
 
+            // =====================================
+            // TÙY BIẾN CHO TỪNG LOẠI BIỂU ĐỒ
+            // =====================================
+            let bgColors = chartColor + '33'; // Mặc định là màu trong suốt cho Line/Bar
+            let borderColors = chartColor;
+
+            // Nếu là biểu đồ Pie (Tròn), cần mảng nhiều màu khác nhau để phân biệt các lát cắt
+            if (chartType === 'pie') {
+                bgColors = labels.map((_, i) => `hsl(${(i * 360) / labels.length}, 70%, 60%)`);
+                borderColors = '#ffffff'; // Viền trắng phân cách các lát cắt
+            } else if (chartType === 'bar') {
+                bgColors = chartColor + '80'; // Làm đậm màu cột lên chút xíu so với background của line
+            }
+
             const ctx = document.getElementById('myChart').getContext('2d');
             if (myChartInstance) myChartInstance.destroy();
 
+            // Khởi tạo Chart
             myChartInstance = new Chart(ctx, {
-                type: 'line',
+                type: chartType, // Truyền biến chartType ('line', 'bar', 'pie') vào đây
                 data: {
                     labels: labels,
                     datasets: [{
                         label: `Chỉ số ${metricLabel}`,
                         data: values,
-                        borderColor: chartColor,
-                        backgroundColor: chartColor + '33',
+                        borderColor: borderColors,
+                        backgroundColor: bgColors,
                         borderWidth: 2,
-                        tension: 0.3,
-                        fill: true,
-                        pointRadius: timeRange === '24h' ? 3 : 4
+                        tension: 0.3, // Chỉ có tác dụng với Line
+                        fill: chartType === 'line', // Chỉ biểu đồ Line mới tô màu dưới đáy
+                        pointRadius: timeRange === '24h' ? 3 : 4 // Tùy biến độ lớn điểm cho Line
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: true } },
-                    scales: {
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: chartType === 'pie' ? 'right' : 'top' // Dời legend cho Pie
+                        }
+                    },
+                    scales: chartType === 'pie' ? {} : { // Ẩn cột x/y nếu là biểu đồ tròn
                         x: { grid: { display: false } },
                         y: { beginAtZero: true }
                     }

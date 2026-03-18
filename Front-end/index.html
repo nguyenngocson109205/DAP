@@ -33,11 +33,6 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link fw-bold" href="history.html">
-                            <i class="bi bi-bar-chart-steps me-1"></i> Lịch sử Ô nhiễm
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link fw-bold" href="forecast.html">
                             <i class="bi bi-compass me-1"></i> Dự đoán ô nhiễm không khí
                         </a>
@@ -227,7 +222,9 @@
                     <div class="card mb-4 border-0 shadow-sm">
                         <div class="card-body">
                             <div class="row g-3">
-                                <div class="col-md-12 text-muted mb-2"><i class="bi bi-funnel"></i> Bộ lọc dữ liệu</div>
+                                <div class="col-md-12 text-muted mb-2">
+                                    <i class="bi bi-funnel"></i> Bộ lọc dữ liệu
+                                </div>
 
                                 <div class="col-md-4">
                                     <label class="form-label small text-muted" for="filterMetric">Chỉ số</label>
@@ -246,9 +243,20 @@
                                         <option value="1m">Tháng này</option>
                                     </select>
                                 </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted" for="filterChartType">Loại biểu
+                                        đồ</label>
+                                    <select class="form-select" id="filterChartType" onchange="handleFilterChange()">
+                                        <option value="line">Biểu đồ Đường (Line)</option>
+                                        <option value="bar">Biểu đồ Cột (Bar)</option>
+                                        <option value="pie">Biểu đồ Tròn (Pie)</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
+
                     <div class="row mt-3 mb-4">
                         <div class="col-12 text-center">
                             <button id="btnRender" class="btn btn-primary px-4">

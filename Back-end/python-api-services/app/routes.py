@@ -50,19 +50,50 @@ def chat():
 def predict():
     try:
         data = request.get_json()
-        model_type = data.get('model', 'gru') 
         
-        prediction_result = ai_service.predict_aqi(model_type)
+        # 1. Lấy tên model (đổi mặc định thành xgboost hoặc lstm cho khớp hệ thống)
+        model_type = data.get('model', 'xgboost').lower() 
         
-        if not prediction_result:
-            return jsonify({'error': 'Lỗi tính toán từ Model'}), 500
+        # 2. LẤY MẢNG FEATURES TỪ WEB GỬI LÊN (Quan trọng nhất)
+        features = data.get('features')
+        
+        # Kiểm tra xem Web có gửi features không và có đúng là danh sách (list) không
+        if not features or not isinstance(features, list):
+            return jsonify({'error': 'Thiếu dữ liệu features đầu vào hoặc định dạng không đúng (phải là list)'}), 400
+        
+        # 3. Truyền ĐẦY ĐỦ 2 tham số vào service
+        prediction_result = ai_service.predict_aqi(model_type, features)
+        
+        if prediction_result is None:
+            return jsonify({'error': f'Lỗi tính toán từ Model {model_type}'}), 500
 
         return jsonify({
             'status': 'success',
             'model': model_type,
-            'prediction': prediction_result
+            'prediction': round(prediction_result, 2) # Làm tròn 2 chữ số thập phân cho đẹp giao diện
         })
 
     except Exception as e:
         print(f"Prediction Error: {e}")
+        return jsonify({'error': str(e)}), 400
+    
+# --- ENDPOINT LẤY DỮ LIỆU THỜI TIẾT THỰC TẾ ---
+@main.route("/weather-forecast", methods=["GET"])
+def get_weather():
+    try:
+        # 1. Gọi hàm cào dữ liệu từ 2 API (Weather & Air Quality) mà mình đã viết trong AIService
+        weather_data = ai_service.get_weather_forecast()
+        
+        # 2. Kiểm tra nếu không lấy được dữ liệu
+        if not weather_data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Không thể lấy dữ liệu từ Open-Meteo. Kiểm tra lại kết nối internet!'
+            }), 500
+
+        # 3. Trả về toàn bộ cục JSON (past_24h và future) cho Node.js/Web xử lý
+        return jsonify(weather_data)
+
+    except Exception as e:
+        print(f"Weather API Error: {e}")
         return jsonify({'error': str(e)}), 400

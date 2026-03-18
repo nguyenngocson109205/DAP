@@ -83,11 +83,32 @@
             mù.</p>
     </div>
 
-    <div class="story-section">
+    <div class="story-section" style="border-bottom: none;">
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-5">
                     <div class="story-number">01</div>
+                    <h2 class="story-title">Vòng lặp thời gian: Lịch sử có lặp lại?</h2>
+                    <p class="story-text">Câu hỏi cuối cùng: Liệu những gì chúng ta thấy chỉ là sự tình cờ của năm nay?
+                        Phân tích chồng lớp (Overlay) dữ liệu 3 năm (2023 - 2025) đã chứng minh một <span
+                            class="highlight-red">Vòng lặp mùa vụ (Seasonal Trend)</span> khắt khe.</p>
+                    <p class="story-text">Đường cong của cả 3 năm đều tạo thành hình chữ <b>U</b>: Luôn tạo đáy vào
+                        tháng 6-7 (an toàn) và bùng nổ vươn lên đỉnh vào tháng 1-2 (độc hại). Tuy nhiên, tin mừng là
+                        đường cong của năm 2025 đang có dấu hiệu <b>thấp hơn</b> các năm trước, cho thấy chất lượng
+                        không khí đang dần cải thiện.</p>
+                </div>
+                <div class="col-lg-7">
+                    <div id="chartSeason" class="echart-box" style="height: 500px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="story-section">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-5">
+                    <div class="story-number">02</div>
                     <h2 class="story-title">Mùa Khô: Nỗi ám ảnh của buồng phổi</h2>
                     <p class="story-text">Nhìn vào dữ liệu trung bình các tháng trong năm, chúng ta thấy một quy luật rõ
                         rệt. Ô nhiễm không rải đều, mà tập trung bùng nổ vào <span class="highlight-red">những tháng mùa
@@ -107,7 +128,7 @@
         <div class="container">
             <div class="row align-items-center g-5 flex-row-reverse">
                 <div class="col-lg-5">
-                    <div class="story-number">02</div>
+                    <div class="story-number">03</div>
                     <h2 class="story-title">Nhịp thở chói chang lúc cao điểm</h2>
                     <p class="story-text">Nếu zoom sát vào từng giờ trong ngày, bụi mịn không phải lúc nào cũng cao. Dữ
                         liệu tố cáo 2 khung giờ "tử thần": <span class="highlight-red">7h-8h sáng</span> và <span
@@ -127,7 +148,7 @@
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-5">
-                    <div class="story-number">03</div>
+                    <div class="story-number">04</div>
                     <h2 class="story-title">Vạch mặt thủ phạm: Lời khai từ Khí NO2</h2>
                     <p class="story-text">Để tìm ra nguồn gốc, hệ thống AI đã phân tích thành phần khí thải. Mức độ ô
                         nhiễm bụi mịn (PM2.5) tăng hoàn toàn đồng pha với <b>Khí NO2 và CO</b>.</p>
@@ -147,7 +168,7 @@
         <div class="container">
             <div class="row align-items-center g-5 flex-row-reverse">
                 <div class="col-lg-5">
-                    <div class="story-number">04</div>
+                    <div class="story-number">05</div>
                     <h2 class="story-title">Sương mù nhân tạo: Hệ lụy từ Gió và Độ ẩm</h2>
                     <div class="mb-4">
                         <h5 class="fw-bold text-dark"><i class="bi bi-wind text-info me-2"></i>1. Hướng gió mang mầm
@@ -174,26 +195,7 @@
         </div>
     </div>
 
-    <div class="story-section" style="border-bottom: none;">
-        <div class="container">
-            <div class="row align-items-center g-5">
-                <div class="col-lg-5">
-                    <div class="story-number">05</div>
-                    <h2 class="story-title">Vòng lặp thời gian: Lịch sử có lặp lại?</h2>
-                    <p class="story-text">Câu hỏi cuối cùng: Liệu những gì chúng ta thấy chỉ là sự tình cờ của năm nay?
-                        Phân tích chồng lớp (Overlay) dữ liệu 3 năm (2023 - 2025) đã chứng minh một <span
-                            class="highlight-red">Vòng lặp mùa vụ (Seasonal Trend)</span> khắt khe.</p>
-                    <p class="story-text">Đường cong của cả 3 năm đều tạo thành hình chữ <b>U</b>: Luôn tạo đáy vào
-                        tháng 6-7 (an toàn) và bùng nổ vươn lên đỉnh vào tháng 1-2 (độc hại). Tuy nhiên, tin mừng là
-                        đường cong của năm 2025 đang có dấu hiệu <b>thấp hơn</b> các năm trước, cho thấy chất lượng
-                        không khí đang dần cải thiện.</p>
-                </div>
-                <div class="col-lg-7">
-                    <div id="chartSeason" class="echart-box" style="height: 500px;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
