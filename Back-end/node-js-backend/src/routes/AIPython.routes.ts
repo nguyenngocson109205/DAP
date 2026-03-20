@@ -1,4 +1,5 @@
 import { Router } from "express";
+
 import { getWeatherController, predictAqiController } from "~/controllers/ai.controllers";
 import { wraperAsync } from "~/utils/handler";
 

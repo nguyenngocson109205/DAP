@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import User from "~/models/User.shema";
 import RefreshToken from "~/models/RefreshToken.schema";
 import Chat from "~/models/Chat.schema";
+import DataAqi from "~/models/dataAqi.schema";
 dotenv.config() //kết nối đến file env
 
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@demoai.vgrkbpn.mongodb.net/?appName=DEMOAI`
@@ -35,6 +36,10 @@ class DatabaseServices {
     }
     get chats(): Collection<Chat> {
         return this.db.collection(process.env.DB_REFRESH_CHAT_COLLECION as string)
+    }
+    get aqiData(): Collection<DataAqi> {
+        // Tên collection 'aqi_data' phải khớp với tên trong MongoDB Compass nha bro
+        return this.db.collection((process.env.DB_AQI_COLLECTION as string) || 'AQI_HCM_DATASET');
     }
 }
 // tạo instance và export instance đó 
