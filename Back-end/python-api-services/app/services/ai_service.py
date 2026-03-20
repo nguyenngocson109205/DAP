@@ -1,80 +1,75 @@
 import os
+import sys
+
+# Đã dọn dẹp sạch sẽ các bùa chú của TensorFlow vì không xài nữa
+import xgboost as xgb
+from sklearn.multioutput import MultiOutputRegressor
+from sklearn.linear_model import Ridge
+import pandas as pd
 import numpy as np
 import joblib
 import requests
 import datetime
-import math
 import warnings 
+import math
+
+# import tensorflow as tf  <--- ĐÃ CẤM CỬA TENSORFLOW ĐỂ SERVER BẤT TỬ
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_DIR = os.path.join(BASE_DIR, 'models')
 
-IDX_HOUR_SIN = 0
-IDX_HOUR_COS = 1
-IDX_TEMP       = 12
-IDX_HUMID      = 13
-IDX_RAIN       = 14
-IDX_WIND_SPEED = 15
-IDX_WIND_SIN   = 16
-IDX_WIND_COS   = 17
-IDX_DEW_POINT  = 18
-IDX_PM25_LAG1  = 20 
-
-import tensorflow as tf
-from tensorflow.keras.models import load_model
-
-# --- ĐOẠN CODE "CHỮA CHÁY" LỖI PHIÊN BẢN TENSORFLOW ---
-class CustomLSTM(tf.keras.layers.LSTM):
-    def __init__(self, *args, **kwargs):
-        # Cắt bỏ cái thông số time_major gây lỗi trước khi load
-        kwargs.pop('time_major', None) 
-        super().__init__(*args, **kwargs)
 class AIService:
     def __init__(self):
-        self.model_dir = MODEL_DIR
         self.models = {}
-        
-        # Khai báo các biến chứa Scaler và Sample Input
-        self.sample_input = None
-        self.scaler_X_LSTM = None
-        self.scaler_y_LSTM = None
-        self.scaler_X_XGB = None
-        self.scaler_y_XGB = None
-        
-        self._load_all_models()
+        self.scalers = {}
+        self.is_loaded = False # Đã xóa dòng gọi load để Lazy Load hoạt động thực sự!
 
-    # def load_resources(self):
-        # if self.is_loaded: return
-        # try:
-        #     self.model = load_model(os.path.join(MODEL_DIR, 'aqi_forecasting_gru_24h_vfinal.keras'))
-        #     self.scaler_X = joblib.load(os.path.join(MODEL_DIR, 'scaler_X_final.pkl'))
-        #     self.scaler_y = joblib.load(os.path.join(MODEL_DIR, 'scaler_y_final.pkl'))
-        #     self.sample_input = np.load(os.path.join(MODEL_DIR, 'sample_input.npy'))
-        #     self.is_loaded = True
-        #     print("[+] BÁO CÁO: Nạp toàn bộ Model (.keras), Scaler (.pkl) và Sample (.npy) THÀNH CÔNG! 🚀")
-        # except Exception as e:
-        #     print(f"[-] Lỗi load resources: {e}")
+    def load_all_resources(self):
+        print("\n--- BẮT ĐẦU NẠP HỆ THỐNG MODEL & SCALER ---")
+        
+        # 1. NẠP SCALER (Chỉ nạp cho XGBoost/Ridge)
+        try:
+            self.scalers['X_xgb']  = joblib.load(os.path.join(MODEL_DIR, 'scaler_X_XGB.pkl'))
+            self.scalers['y_xgb']  = joblib.load(os.path.join(MODEL_DIR, 'scaler_y_XGB.pkl'))
+            print("[V] Scalers: Nạp thành công!")
+        except Exception as e:
+            print(f"[X] Lỗi nạp Scaler: {e}")
+
+        # 2. NẠP RIDGE
+        try:
+            path_ridge = os.path.join(MODEL_DIR, 'ridge_pm25_multi_v1.pkl')
+            self.models['ridge'] = joblib.load(path_ridge)
+            print("[V] Ridge: OK")
+        except Exception as e:
+            print(f"[X] Ridge THẤT BẠI: {e}")
+
+        # 3. NẠP XGBOOST
+        try:
+            path_xgb = os.path.join(MODEL_DIR, 'xgboost_pm25_multi_v1.pkl')
+            self.models['xgboost'] = joblib.load(path_xgb)
+            print("[V] XGBoost: OK")
+        except Exception as e:
+            print(f"[X] XGBoost THẤT BẠI: {e}")
+
+        print("------------------------------------------")
+        print(f"📊 DANH SÁCH MODEL SẴN SÀNG: {list(self.models.keys())}")
+        print("------------------------------------------\n")
 
     def get_weather_forecast(self):
+        """Hàm này dành riêng cho Frontend lấy dữ liệu vẽ biểu đồ"""
         try:
-            # 1. Khai báo tọa độ TP.HCM và cấu hình lấy 1 ngày quá khứ, 2 ngày tương lai
             lat, lon = 10.8231, 106.6297
             params = f"latitude={lat}&longitude={lon}&timezone=Asia%2FBangkok&past_days=1&forecast_days=2"
             
-            # 2. Gọi API Thời tiết (Lấy future weather để dự báo)
-            # Lưu ý: Chữ precipitation tương ứng với cột Rain lúc Sơn train
             url_weather = f"https://api.open-meteo.com/v1/forecast?{params}&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m"
+            url_air = f"https://air-quality-api.open-meteo.com/v1/air-quality?{params}&hourly=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,ozone,sulphur_dioxide"
+            
             res_weather = requests.get(url_weather).json()
-
-            # 3. Gọi API Không khí (Lấy past AQI, PM2.5 để làm Lag)
-            url_air = f"https://air-quality-api.open-meteo.com/v1/air-quality?{params}&hourly=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,ozone,sulphur_dioxide,us_aqi,uv_index"
             res_air = requests.get(url_air).json()
 
-            # Lấy index của giờ hiện tại
             now = datetime.datetime.now()
-            # Vì past_days=1 nên giờ hiện tại sẽ nằm ở mảng thứ 24 (bắt đầu từ 0)
             current_hour_idx = 24 + now.hour 
 
             hourly_w = res_weather['hourly']
@@ -83,165 +78,118 @@ class AIService:
             past_24h_data = []
             future_data = []
 
-            # 4. Gom 24 giờ TRƯỚC (Quá khứ)
             for i in range(24, 0, -1):
                 idx = current_hour_idx - i
                 past_24h_data.append({
                     'time': hourly_w['time'][idx],
-                    'pm25': hourly_a['pm2_5'][idx], # Lấy PM2.5 làm Lag
-                    'pm10': hourly_a['pm10'][idx],
-                    'temp': hourly_w['temperature_2m'][idx],
-                    'humid': hourly_w['relative_humidity_2m'][idx],
-                    'rain': hourly_w['precipitation'][idx],
-                    'wind_speed': hourly_w['wind_speed_10m'][idx],
-                    'wind_dir': hourly_w['wind_direction_10m'][idx]
+                    'pm25': hourly_a['pm2_5'][idx] if hourly_a['pm2_5'][idx] is not None else 0,
                 })
 
-            # 5. Gom 24 giờ TỚI (Tương lai)
-            for i in range(24):
+            for i in range(48): 
                 idx = current_hour_idx + i
-                future_data.append({
-                    'time': hourly_w['time'][idx],
-                    # Tương lai chưa có thực tế, PM2.5 ở đây là do Open-Meteo dự báo (chỉ để tham khảo)
-                    'pm25': hourly_a['pm2_5'][idx], 
-                    'temp': hourly_w['temperature_2m'][idx],
-                    'humid': hourly_w['relative_humidity_2m'][idx],
-                    'rain': hourly_w['precipitation'][idx],
-                    'wind_speed': hourly_w['wind_speed_10m'][idx],
-                    'wind_dir': hourly_w['wind_direction_10m'][idx]
-                })
+                if idx < len(hourly_w['time']):
+                    future_data.append({
+                        'time': hourly_w['time'][idx],
+                        'pm25': hourly_a['pm2_5'][idx] if hourly_a['pm2_5'][idx] is not None else 0,
+                        'temp': hourly_w['temperature_2m'][idx],
+                        'humid': hourly_w['relative_humidity_2m'][idx],
+                        'rain': hourly_w['precipitation'][idx],
+                        'wind_speed': hourly_w['wind_speed_10m'][idx],
+                        'wind_dir': hourly_w['wind_direction_10m'][idx]
+                    })
 
             return {
                 "past_24h": past_24h_data, 
                 "future": future_data
             }
-
         except Exception as e:
-            print(f"Lỗi gọi 2 API Weather/Air: {e}")
+            print(f"[-] Lỗi API Weather cho Web: {e}")
             return None
-        
-    def _load_all_models(self):
+
+    def fetch_and_preprocess_data(self):
+        """Gọi API Open-Meteo và dùng Pandas để Feature Engineering y hệt lúc Train"""
         try:
-            # ==========================================
-            # PHẦN 1: LOAD SCALERS & SAMPLE INPUT
-            # ==========================================
-            # 1.1 Load Sample Input
-            sample_path = os.path.join(self.model_dir, 'sample_input.npy')
-            if os.path.exists(sample_path):
-                self.sample_input = np.load(sample_path)
-                print("✅ Đã load thành công sample_input.npy")
-
-            # 1.2 Load Scalers cho LSTM
-            if os.path.exists(os.path.join(self.model_dir, 'scaler_X_LSTM.pkl')):
-                self.scaler_X_LSTM = joblib.load(os.path.join(self.model_dir, 'scaler_X_LSTM.pkl'))
-                print("✅ Đã load thành công scaler_X_LSTM")
+            lat, lon = 10.8231, 106.6297
+            params = f"latitude={lat}&longitude={lon}&timezone=Asia%2FBangkok&past_days=3&forecast_days=0"
             
-            if os.path.exists(os.path.join(self.model_dir, 'scaler_y_LSTM.pkl')):
-                self.scaler_y_LSTM = joblib.load(os.path.join(self.model_dir, 'scaler_y_LSTM.pkl'))
-                print("✅ Đã load thành công scaler_y_LSTM")
-
-            # 1.3 Load Scalers cho XGBoost (Ridge có thể xài chung scaler này)
-            if os.path.exists(os.path.join(self.model_dir, 'scaler_X_XGB.pkl')):
-                self.scaler_X_XGB = joblib.load(os.path.join(self.model_dir, 'scaler_X_XGB.pkl'))
-                print("✅ Đã load thành công scaler_X_XGB")
+            url_weather = f"https://api.open-meteo.com/v1/forecast?{params}&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m"
+            url_air = f"https://air-quality-api.open-meteo.com/v1/air-quality?{params}&hourly=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,ozone,sulphur_dioxide"
             
-            if os.path.exists(os.path.join(self.model_dir, 'scaler_y_XGB.pkl')):
-                self.scaler_y_XGB = joblib.load(os.path.join(self.model_dir, 'scaler_y_XGB.pkl'))
-                print("✅ Đã load thành công scaler_y_XGB")
+            res_w = requests.get(url_weather).json()['hourly']
+            res_a = requests.get(url_air).json()['hourly']
 
-            # ==========================================
-            # PHẦN 2: LOAD MODELS
-            # ==========================================
-            # 2.1 Load LSTM
-            # 2.1 Load LSTM (truyền thêm cái custom_objects vào để nó xài class "chữa cháy" ở trên)
-            lstm_path = os.path.join(self.model_dir, 'lstm_aqi_model.h5')
-            if os.path.exists(lstm_path):
-                self.models['lstm'] = load_model(lstm_path, custom_objects={'LSTM': CustomLSTM},compile=False)
-                print("✅ Đã load thành công LSTM")
+            df = pd.DataFrame({
+                'time': pd.to_datetime(res_w['time']),
+                'PM2.5': res_a['pm2_5'],
+                'PM10': res_a['pm10'],
+                'NO2': res_a['nitrogen_dioxide'],
+                'CO': res_a['carbon_monoxide'],
+                'SO2': res_a['sulphur_dioxide'],
+                'O3': res_a['ozone'],
+                'Temperature': res_w['temperature_2m'],
+                'Humidity': res_w['relative_humidity_2m'],
+                'Rain': res_w['precipitation'],
+                'Wind_Speed': res_w['wind_speed_10m'],
+                'Wind_Dir': res_w['wind_direction_10m']
+            })
             
-            # 2.2 Load XGBoost
-            xgb_path = os.path.join(self.model_dir, 'xgboost_pm25_multi_v1.pkl')
-            if os.path.exists(xgb_path):
-                self.models['xgboost'] = joblib.load(xgb_path)
-                print("✅ Đã load thành công XGBoost")
+            df.set_index('time', inplace=True)
+            df.interpolate(method='linear', inplace=True)
+            df.bfill(inplace=True) 
 
-            # 2.3 Load Ridge
-            ridge_path = os.path.join(self.model_dir, 'ridge_pm25_multi_v1.pkl')
-            if os.path.exists(ridge_path):
-                self.models['ridge'] = joblib.load(ridge_path)
-                print("✅ Đã load thành công Ridge")
+            df['hour_sin'] = np.sin(2 * np.pi * df.index.hour / 24)
+            df['hour_cos'] = np.cos(2 * np.pi * df.index.hour / 24)
+            df['doy_sin'] = np.sin(2 * np.pi * df.index.dayofyear / 365)
+            df['doy_cos'] = np.cos(2 * np.pi * df.index.dayofyear / 365)
+            df['is_weekend'] = (df.index.dayofweek >= 5).astype(int)
+
+            wd_rad = df['Wind_Dir'] * np.pi / 180
+            df['Wind_sin'] = np.sin(wd_rad)
+            df['Wind_cos'] = np.cos(wd_rad)
+
+            for lag in range(1, 25):
+                df[f'PM2.5_lag_{lag}'] = df['PM2.5'].shift(lag)
+
+            df.dropna(inplace=True) 
+            return df
             
-            print("--- Trạng thái Load Models & Scalers: HOÀN TẤT ---")
-
         except Exception as e:
-            print(f"❌ Lỗi load model/scaler: {e}")
-    def predict_aqi(self, model_type, features):
-        """
-        Hàm thực hiện dự báo AQI (hoặc PM2.5) dựa trên model được chọn.
-        Tự động áp dụng đúng Scaler và định dạng Shape (2D/3D).
-        """
-        # Đưa tên model về chữ thường để tránh lỗi gõ nhầm
+            print(f"[-] Lỗi fetch/preprocess dữ liệu: {e}")
+            return None
+
+    # Đã đổi mặc định thành xgboost
+    def predict_aqi(self, model_type='xgboost'): 
+        """Thực thi dự báo đa bước (T+1, T+2, T+3) dựa trên loại Model"""
+        
+        if not self.is_loaded:
+            print("⏳ Có yêu cầu dự báo! Lần đầu tiên gọi model, bắt đầu nạp vào RAM...")
+            self.load_all_resources()
+            self.is_loaded = True
+
+        df = self.fetch_and_preprocess_data()
+        if df is None or df.empty:
+            return None
+
         model_type = model_type.lower()
         
         if model_type not in self.models:
-            print(f"❌ Lỗi: Model '{model_type}' chưa được nạp vào hệ thống!")
+            print(f"❌ CẢNH BÁO: Model '{model_type}' chưa được nạp!")
             return None
-        
+
         try:
-            # 1. Đưa dữ liệu đầu vào thành mảng 2D NumPy: (1 dòng, n_features cột)
-            data_2d = np.array(features).reshape(1, -1)
-            
-            raw_prediction = 0
-            final_aqi = 0
-
-            # ==========================================
-            # LUỒNG 1: XỬ LÝ CHO DEEP LEARNING (LSTM)
-            # ==========================================
-            if model_type == 'lstm':
-                # Tiền xử lý: Scale biến X bằng scaler_X_LSTM
-                if self.scaler_X_LSTM is not None:
-                    data_scaled = self.scaler_X_LSTM.transform(data_2d)
-                else:
-                    data_scaled = data_2d
+            # Đã fix lại cú pháp IF
+            if model_type in ['xgboost', 'ridge']:
+                recent_1h = df.tail(1).values
+                scaled_X = self.scalers['X_xgb'].transform(recent_1h)
                 
-                # Đổi Shape sang 3D cho LSTM: (samples, timesteps, features)
-                data_3d = data_scaled.reshape(1, 1, -1)
+                pred_scaled = self.models[model_type].predict(scaled_X)
+                pred_real = self.scalers['y_xgb'].inverse_transform(pred_scaled)[0]
                 
-                # Gọi model dự đoán
-                raw_prediction = self.models['lstm'].predict(data_3d, verbose=0)[0][0]
-                
-                # Hậu xử lý: Giải mã kết quả (Inverse Transform) bằng scaler_y_LSTM
-                if self.scaler_y_LSTM is not None:
-                    pred_2d = np.array([[raw_prediction]])
-                    final_aqi = self.scaler_y_LSTM.inverse_transform(pred_2d)[0][0]
-                else:
-                    final_aqi = raw_prediction
-
-            # ==========================================
-            # LUỒNG 2: XỬ LÝ CHO MACHINE LEARNING (XGBOOST, RIDGE)
-            # ==========================================
-            elif model_type in ['xgboost', 'ridge']:
-                # Tiền xử lý: Scale biến X bằng scaler_X_XGB
-                if self.scaler_X_XGB is not None:
-                    data_scaled = self.scaler_X_XGB.transform(data_2d)
-                else:
-                    data_scaled = data_2d
-                
-                # Gọi model dự đoán (ML truyền thống xài luôn mảng 2D)
-                raw_prediction = self.models[model_type].predict(data_scaled)[0]
-                
-                # Hậu xử lý: Giải mã kết quả (Inverse Transform) bằng scaler_y_XGB
-                if self.scaler_y_XGB is not None:
-                    pred_2d = np.array([[raw_prediction]])
-                    final_aqi = self.scaler_y_XGB.inverse_transform(pred_2d)[0][0]
-                else:
-                    final_aqi = raw_prediction
-
-            # Trả về kết quả thực tế (ép kiểu float cho chắc ăn)
-            return float(final_aqi)
+                return [round(float(max(0, val)), 2) for val in pred_real]
 
         except Exception as e:
-            print(f"❌ Lỗi trong quá trình tính toán của model '{model_type}': {e}")
+            print(f"❌ Lỗi Predict Model {model_type}: {e}")
             return None
-        
+
+# Khởi tạo Service
 ai_service = AIService()

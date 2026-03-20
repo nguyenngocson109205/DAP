@@ -464,10 +464,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 /* =========================================
-   6. BIỂU ĐỒ HOA GIÓ (WIND ROSE CHARTS)
+   6. BIỂU ĐỒ HOA GIÓ (WIND ROSE) & PM2.5 BAR CHART
    ========================================= */
 document.addEventListener('DOMContentLoaded', function () {
     const windInstances = [];
+    const pm25Instances = []; // Mảng chứa biểu đồ mới
 
     $.get('./data/hcm_wind_dataset.json', function (data) {
         const targets = [
@@ -477,53 +478,83 @@ document.addEventListener('DOMContentLoaded', function () {
         ];
 
         targets.forEach(function (target) {
-            const domId = `wind-m${target.m}-y${target.y}`;
-            const dom = document.getElementById(domId);
-            if (!dom) return;
-
+            // --- 1. VẼ BIỂU ĐỒ HOA GIÓ CŨ ---
+            const domId_Wind = `wind-m${target.m}-y${target.y}`;
+            const dom_Wind = document.getElementById(domId_Wind);
+            
             const key = `m${target.m}_y${target.y}`;
             const chartData = data.grid[key];
 
-            const myChart = echarts.init(dom);
-            windInstances.push(myChart);
+            if (dom_Wind) {
+                const myChart_Wind = echarts.init(dom_Wind);
+                windInstances.push(myChart_Wind);
 
-            if (!chartData) {
-                myChart.setOption({
-                    title: { text: 'Chưa có dữ liệu', left: 'center', top: 'center', textStyle: { fontSize: 12, color: '#999' } }
-                });
-                return;
+                if (!chartData) {
+                    myChart_Wind.setOption({ title: { text: 'Chưa có dữ liệu' } });
+                } else {
+                    const seriesConfig = data.legend.map((name, index) => ({
+                        type: 'bar',
+                        data: chartData.series_data[index],
+                        coordinateSystem: 'polar',
+                        name: name,
+                        stack: 'wind'
+                    }));
+
+                    myChart_Wind.setOption({
+                        color: ['#a2d2ff', '#5c9ce6', '#2b65bd', '#123473'],
+                        tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} giờ' },
+                        legend: { show: false },
+                        polar: { radius: '65%' },
+                        angleAxis: { type: 'category', data: data.directions, boundaryGap: false, splitLine: { show: true }, axisLine: { show: false }, axisLabel: { interval: 3, fontSize: 9 } },
+                        radiusAxis: { type: 'value', axisLine: { show: false }, axisLabel: { show: false } },
+                        series: seriesConfig
+                    });
+                }
             }
 
-            const seriesConfig = data.legend.map((name, index) => ({
-                type: 'bar',
-                data: chartData.series_data[index],
-                coordinateSystem: 'polar',
-                name: name,
-                stack: 'wind'
-            }));
+            // --- 2. VẼ BIỂU ĐỒ CỘT PM2.5 MỚI ---
+            const domId_PM25 = `pm25-m${target.m}-y${target.y}`;
+            const dom_PM25 = document.getElementById(domId_PM25);
 
-            const option = {
-                color: ['#a2d2ff', '#5c9ce6', '#2b65bd', '#123473'],
-                tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} giờ' },
-                legend: { show: false },
-                polar: { radius: '65%' },
-                angleAxis: {
-                    type: 'category',
-                    data: data.directions,
-                    boundaryGap: false,
-                    splitLine: { show: true, lineStyle: { color: '#eee' } },
-                    axisLine: { show: false },
-                    axisLabel: { interval: 3, fontSize: 9 }
-                },
-                radiusAxis: {
-                    type: 'value',
-                    axisLine: { show: false },
-                    axisLabel: { show: false }
-                },
-                series: seriesConfig
-            };
+            if (dom_PM25) {
+                const myChart_PM25 = echarts.init(dom_PM25);
+                pm25Instances.push(myChart_PM25);
 
-            myChart.setOption(option);
+                if (!chartData || !chartData.avg_pm25) { // Kiểm tra xem file JSON có trường avg_pm25 không
+                     myChart_PM25.setOption({ title: { text: 'Thiếu dữ liệu PM2.5' } });
+                } else {
+                     myChart_PM25.setOption({
+                         tooltip: {
+                             trigger: 'axis',
+                             axisPointer: { type: 'shadow' },
+                             formatter: 'Hướng: {b}<br/>PM2.5 TB: {c} µg/m³'
+                         },
+                         grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+                         xAxis: {
+                             type: 'category',
+                             data: data.directions,
+                             axisLabel: { interval: 0, rotate: 45, fontSize: 10 }
+                         },
+                         yAxis: {
+                             type: 'value',
+                             name: 'PM2.5 (µg/m³)'
+                         },
+                         series: [
+                             {
+                                 name: 'PM2.5',
+                                 type: 'bar',
+                                 data: chartData.avg_pm25, // Dữ liệu này bạn phải chuẩn bị trong JSON
+                                 itemStyle: {
+                                     color: function(params) {
+                                         // Đổi màu thông minh: Vượt ngưỡng thì màu đỏ, an toàn thì xanh
+                                         return params.value > 50 ? '#ff4d4f' : '#73d13d';
+                                     }
+                                 }
+                             }
+                         ]
+                     });
+                }
+            }
         });
 
     }).fail(function () {

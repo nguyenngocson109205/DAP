@@ -8,7 +8,7 @@ import { defaultErrorHandler } from "./middlewares/error.middleware";
 import mediasRouter from "./routes/medias.routes";
 import { initFolder } from "./utils/file";
 import staticRouter from "./routes/static.routes";
-import aiRouter from "./routes/aiPython.routes";
+import aiRouter from "./routes/AIPython.routes";
 
 
 const app = express();

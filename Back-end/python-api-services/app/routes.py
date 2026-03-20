@@ -51,32 +51,28 @@ def predict():
     try:
         data = request.get_json()
         
-        # 1. Lấy tên model (đổi mặc định thành xgboost hoặc lstm cho khớp hệ thống)
-        model_type = data.get('model', 'xgboost').lower() 
+        # 1. Chỉ lấy tên model từ Node.js gửi qua (mặc định là lstm)
+        model_type = data.get('model', 'lstm').lower() 
         
-        # 2. LẤY MẢNG FEATURES TỪ WEB GỬI LÊN (Quan trọng nhất)
-        features = data.get('features')
+        # 2. BỎ LUÔN ĐOẠN CHECK FEATURES CŨ ĐI
+        # Vì thằng ai_service bản mới nhất nó tự biết fetch data rồi!
         
-        # Kiểm tra xem Web có gửi features không và có đúng là danh sách (list) không
-        if not features or not isinstance(features, list):
-            return jsonify({'error': 'Thiếu dữ liệu features đầu vào hoặc định dạng không đúng (phải là list)'}), 400
-        
-        # 3. Truyền ĐẦY ĐỦ 2 tham số vào service
-        prediction_result = ai_service.predict_aqi(model_type, features)
+        # 3. Gọi thẳng service (chỉ truyền model_type)
+        prediction_result = ai_service.predict_aqi(model_type)
         
         if prediction_result is None:
             return jsonify({'error': f'Lỗi tính toán từ Model {model_type}'}), 500
 
+        # Trả về kết quả (bây giờ prediction_result là 1 mảng 3 số)
         return jsonify({
             'status': 'success',
             'model': model_type,
-            'prediction': round(prediction_result, 2) # Làm tròn 2 chữ số thập phân cho đẹp giao diện
+            'prediction': prediction_result 
         })
 
     except Exception as e:
         print(f"Prediction Error: {e}")
         return jsonify({'error': str(e)}), 400
-    
 # --- ENDPOINT LẤY DỮ LIỆU THỜI TIẾT THỰC TẾ ---
 @main.route("/weather-forecast", methods=["GET"])
 def get_weather():

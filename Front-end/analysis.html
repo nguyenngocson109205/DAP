@@ -195,6 +195,117 @@
         </div>
     </div>
 
+    <div class="story-section">
+        <div class="container">
+            <div class="row align-items-center g-5 flex-row-reverse">
+                <div class="col-lg-5">
+                    <div class="story-number">07</div>
+                    <h2 class="story-title">Chiếc lồng kính vô hình: Độ ẩm & Bụi mịn</h2>
+                    <p class="story-text">Vì sao những ngày sương mù lãng mạn ở Sài Gòn lại thường đi kèm với cảnh báo ô nhiễm đỏ quạch? Câu trả lời nằm ở <b>Độ ẩm không khí (Humidity)</b>.</p>
+                    
+                    <p class="story-text">Biểu đồ phân tán (Scatter Plot) bên cạnh tố cáo một quy luật đáng sợ: Khi độ ẩm vượt mức <span class="highlight-blue">70% - 80%</span>, nồng độ PM2.5 tăng vọt một cách bất thường.</p>
+                    
+                    <div class="p-3 bg-light rounded-3 border-start border-4 border-info mt-4">
+                        <small class="text-muted d-block fw-bold mb-1"><i class="bi bi-info-circle-fill text-info me-1"></i> Giải thích AI:</small>
+                        <small class="text-dark">Đây là hiện tượng <i>Hygroscopic Growth (Bụi ngậm nước)</i>. Hạt bụi mịn hút hơi nước, phình to khối lượng và lơ lửng sát mặt đất. Kết hợp với khí thải giao thông, chúng tạo ra một lớp sương mù quang hóa đặc quánh, nhốt chặt chất độc lại trong buồng phổi của thành phố.</small>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div id="chartHumidity" class="echart-box" style="height: 450px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="story-section">
+        <div class="container-fluid" style="max-width: 1400px; padding: 0 5%;">
+            <div class="row align-items-start g-5">
+                
+                <div class="col-xl-3 col-lg-4">
+                    <div class="story-number">06</div>
+                    <h2 class="story-title">Dấu vết Gió mùa: Từ đâu thổi tới?</h2>
+                    <p class="story-text">Sự chênh lệch ô nhiễm giữa các tháng không chỉ do mưa, mà còn do <b>Gió mùa (Monsoon)</b>. Biểu đồ <i>Hoa gió (Wind Rose)</i> và nồng độ PM2.5 sẽ làm rõ đường đi của bụi.</p>
+                    
+                    <ul class="list-unstyled mt-4">
+                        <li class="mb-3">
+                            <h6 class="fw-bold text-danger"><i class="bi bi-sun me-2"></i>Tháng 1 & Tháng 12</h6>
+                            <p class="text-muted small">Gió Đông Bắc chiếm ưu thế, thổi thẳng khói bụi từ các khu công nghiệp lân cận vào trung tâm thành phố.</p>
+                        </li>
+                        <li class="mb-3">
+                            <h6 class="fw-bold text-info"><i class="bi bi-cloud-rain me-2"></i>Tháng 6</h6>
+                            <p class="text-muted small">Gió Tây Nam mang theo luồng không khí sạch từ biển, kết hợp với mưa giúp rửa trôi hoàn toàn bụi mịn.</p>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="col-xl-9 col-lg-8">
+                    <div class="card shadow-sm border-0 rounded-4">
+                        <div class="card-body p-4 bg-white rounded-4">
+                            
+                            <h5 class="text-danger fw-bold border-bottom pb-2"><i class="bi bi-sun"></i> Tháng 1 (Mùa Khô Cao Điểm)</h5>
+                            <div class="row text-center mb-5 mt-3">
+                                <div class="col-md-4">
+                                    <span class="badge bg-light text-dark mb-2 fs-6 border">Năm 2023</span>
+                                    <div id="wind-m1-y2023" style="height: 250px; width: 100%;"></div>
+                                    <div id="pm25-m1-y2023" style="height: 180px; width: 100%;"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="badge bg-light text-dark mb-2 fs-6 border">Năm 2024</span>
+                                    <div id="wind-m1-y2024" style="height: 250px; width: 100%;"></div>
+                                    <div id="pm25-m1-y2024" style="height: 180px; width: 100%;"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="badge bg-light text-dark mb-2 fs-6 border">Năm 2025</span>
+                                    <div id="wind-m1-y2025" style="height: 250px; width: 100%;"></div>
+                                    <div id="pm25-m1-y2025" style="height: 180px; width: 100%;"></div>
+                                </div>
+                            </div>
+
+                            <h5 class="text-info fw-bold border-bottom pb-2 mt-4"><i class="bi bi-cloud-rain"></i> Tháng 6 (Mùa Mưa Bắt Đầu)</h5>
+                            <div class="row text-center mb-5 mt-3">
+                                <div class="col-md-4">
+                                    <span class="badge bg-light text-dark mb-2 fs-6 border">Năm 2023</span>
+                                    <div id="wind-m6-y2023" style="height: 250px; width: 100%;"></div>
+                                    <div id="pm25-m6-y2023" style="height: 180px; width: 100%;"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="badge bg-light text-dark mb-2 fs-6 border">Năm 2024</span>
+                                    <div id="wind-m6-y2024" style="height: 250px; width: 100%;"></div>
+                                    <div id="pm25-m6-y2024" style="height: 180px; width: 100%;"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="badge bg-light text-dark mb-2 fs-6 border">Năm 2025</span>
+                                    <div id="wind-m6-y2025" style="height: 250px; width: 100%;"></div>
+                                    <div id="pm25-m6-y2025" style="height: 180px; width: 100%;"></div>
+                                </div>
+                            </div>
+
+                            <h5 class="text-secondary fw-bold border-bottom pb-2 mt-4"><i class="bi bi-snow"></i> Tháng 12 (Gió Mùa Đông Bắc)</h5>
+                            <div class="row text-center mt-3">
+                                <div class="col-md-4">
+                                    <span class="badge bg-light text-dark mb-2 fs-6 border">Năm 2023</span>
+                                    <div id="wind-m12-y2023" style="height: 250px; width: 100%;"></div>
+                                    <div id="pm25-m12-y2023" style="height: 180px; width: 100%;"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="badge bg-light text-dark mb-2 fs-6 border">Năm 2024</span>
+                                    <div id="wind-m12-y2024" style="height: 250px; width: 100%;"></div>
+                                    <div id="pm25-m12-y2024" style="height: 180px; width: 100%;"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="badge bg-light text-dark mb-2 fs-6 border">Năm 2025</span>
+                                    <div id="wind-m12-y2025" style="height: 250px; width: 100%;"></div>
+                                    <div id="pm25-m12-y2025" style="height: 180px; width: 100%;"></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                </div>
+        </div>
+    </div>
+
 
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>

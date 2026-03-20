@@ -185,6 +185,61 @@ document.addEventListener('DOMContentLoaded', function () {
                 areaStyle: idx === availableYears.length - 1 ? { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(16, 185, 129, 0.3)' }, { offset: 1, color: 'rgba(16, 185, 129, 0)' }]) } : null
             }))
         });
+        
+        // =========================================================
+        // CHƯƠNG 7: TƯƠNG QUAN ĐỘ ẨM VÀ PM2.5 (REAL DATA)
+        // =========================================================
+        const humData_v2 = [];
+        
+        // 1. Dò tìm vị trí cột PM2.5 và Độ ẩm (Humid) từ dòng tiêu đề (rawData[0])
+        const headers = rawData[0].map(h => h.toString().toLowerCase());
+        const idxPM25 = headers.findIndex(h => h.includes('pm2.5') || h.includes('pm25'));
+        const idxHumid = headers.findIndex(h => h.includes('humid') || h.includes('rh'));
+
+        // 2. Rút dữ liệu (dataRows đã được bro khai báo ở trên: const dataRows = rawData.slice(1);)
+        if (idxPM25 !== -1 && idxHumid !== -1) {
+            dataRows.forEach(row => {
+                const pm25 = Number(row[idxPM25]);
+                const hum = Number(row[idxHumid]);
+                
+                // Chỉ lấy các dòng có số liệu hợp lệ > 0
+                if (!isNaN(pm25) && !isNaN(hum) && pm25 > 0 && hum > 0) {
+                    humData_v2.push([hum.toFixed(1), pm25.toFixed(1)]);
+                }
+            });
+        }
+
+        // 3. Đổ data thật vào chartHumidity
+        chartHumidity.setOption({
+            title: { text: 'Tương quan Độ Ẩm & PM2.5', left: 'center', top: 5, textStyle: { fontSize: 14, color: '#475569' } },
+            tooltip: { formatter: 'Độ ẩm: {c[0]}%<br/>PM2.5: <b>{c[1]}</b> µg/m³' },
+            grid: { left: '10%', right: '5%', bottom: '15%', top: '20%' },
+            xAxis: { 
+                type: 'value', 
+                name: 'Độ ẩm (%)', 
+                min: 'dataMin', // Tự động co giãn trục X theo độ ẩm thấp nhất
+                max: 100, 
+                splitLine: { show: false } 
+            },
+            yAxis: { 
+                type: 'value', 
+                name: 'PM2.5', 
+                splitLine: { lineStyle: { type: 'dashed' } } 
+            },
+            visualMap: { 
+                show: false, 
+                min: 40, max: 100, 
+                dimension: 0, 
+                inRange: { color: ['#94a3b8', '#3b82f6', '#1e3a8a'] } 
+            },
+            series: [{ 
+                type: 'scatter', 
+                data: humData_v2, 
+                symbolSize: 4, 
+                large: true, // Chế độ vẽ data lớn siêu mượt
+                itemStyle: { opacity: 0.3 } 
+            }]
+        });
     }
 
     // 3. Tải file JSON và nạp vào máy xay (Nhớ ép trình duyệt qua HTTP localhost)
@@ -193,5 +248,97 @@ document.addEventListener('DOMContentLoaded', function () {
         renderCharts(res);
     }).fail(function () {
         alert("Không tải được Data! Lỗi đường dẫn: " + DATA_URL);
+    });
+
+
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const windInstances = [];
+    const pm25Instances = [];
+
+    $.get('./data/hcm_wind_dataset.json', function (data) {
+        const targets = [
+            { m: 1, y: 2023 }, { m: 1, y: 2024 }, { m: 1, y: 2025 },
+            { m: 6, y: 2023 }, { m: 6, y: 2024 }, { m: 6, y: 2025 },
+            { m: 12, y: 2023 }, { m: 12, y: 2024 }, { m: 12, y: 2025 }
+        ];
+
+        targets.forEach(function (target) {
+            // --- 1. VẼ BIỂU ĐỒ HOA GIÓ ---
+            const domId_Wind = `wind-m${target.m}-y${target.y}`;
+            const dom_Wind = document.getElementById(domId_Wind);
+            
+            const key = `m${target.m}_y${target.y}`;
+            const chartData = data.grid[key];
+
+            if (dom_Wind) {
+                const myChart_Wind = echarts.init(dom_Wind);
+                windInstances.push(myChart_Wind);
+
+                if (!chartData) {
+                    myChart_Wind.setOption({ title: { text: 'Chưa có dữ liệu' } });
+                } else {
+                    const seriesConfig = data.legend.map((name, index) => ({
+                        type: 'bar',
+                        data: chartData.series_data[index],
+                        coordinateSystem: 'polar',
+                        name: name,
+                        stack: 'wind'
+                    }));
+
+                    myChart_Wind.setOption({
+                        color: ['#a2d2ff', '#5c9ce6', '#2b65bd', '#123473'],
+                        tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} giờ' },
+                        legend: { show: false },
+                        polar: { radius: '65%' },
+                        angleAxis: { type: 'category', data: data.directions, boundaryGap: false, splitLine: { show: true }, axisLine: { show: false }, axisLabel: { interval: 3, fontSize: 9 } },
+                        radiusAxis: { type: 'value', axisLine: { show: false }, axisLabel: { show: false } },
+                        series: seriesConfig
+                    });
+                }
+            }
+
+            // --- 2. VẼ BIỂU ĐỒ CỘT PM2.5 ---
+            const domId_PM25 = `pm25-m${target.m}-y${target.y}`;
+            const dom_PM25 = document.getElementById(domId_PM25);
+
+            if (dom_PM25) {
+                const myChart_PM25 = echarts.init(dom_PM25);
+                pm25Instances.push(myChart_PM25);
+
+                if (!chartData || !chartData.avg_pm25) { 
+                     myChart_PM25.setOption({ title: { text: 'Thiếu dữ liệu PM2.5' } });
+                } else {
+                     myChart_PM25.setOption({
+                         tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: 'Hướng: {b}<br/>PM2.5 TB: {c} µg/m³' },
+                         grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+                         xAxis: { type: 'category', data: data.directions, axisLabel: { interval: 0, rotate: 45, fontSize: 10 } },
+                         yAxis: { type: 'value', name: 'PM2.5 (µg/m³)' },
+                         series: [
+                             {
+                                 name: 'PM2.5',
+                                 type: 'bar',
+                                 data: chartData.avg_pm25, 
+                                 itemStyle: {
+                                     color: function(params) {
+                                         return params.value > 50 ? '#ff4d4f' : '#73d13d';
+                                     }
+                                 }
+                             }
+                         ]
+                     });
+                }
+            }
+        });
+
+        // Hỗ trợ resize cho 18 biểu đồ mới
+        window.addEventListener('resize', function () {
+            windInstances.forEach(chart => chart.resize());
+            pm25Instances.forEach(chart => chart.resize());
+        });
+
+    }).fail(function () {
+        console.error("Lỗi tải file hcm_wind_dataset.json");
     });
 });

@@ -54,13 +54,9 @@
             </div>
             <div class="d-flex gap-3 bg-white p-3 rounded shadow-sm">
                 <select class="form-select border-primary" id="modelSelector" style="width: 200px;">
-                    <option value="lstm">LSTM (Deep Learning)</option>
-                    <option value="gru">Ridge</option>
+                    <!-- <option value="lstm">LSTM (Deep Learning)</option> -->
+                    <option value="ridge">Ridge</option>
                     <option value="xgboost">XGBoost (Baseline)</option>
-                </select>
-                <select class="form-select" id="horizonSelector" style="width: 150px;">
-                    <option value="24">Dự báo 24h tới</option>
-                    <option value="48">Dự báo 48h tới</option>
                 </select>
                 <button class="btn btn-primary fw-bold" id="btnRunPrediction">
                     <i class="bi bi-play-fill"></i> Chạy Model
