@@ -1,13 +1,11 @@
 import pandas as pd
 import os
 
-# Biến global để giữ dữ liệu duy nhất trong RAM
 _shared_df = None
 
 def get_df():
     global _shared_df
     if _shared_df is None:
-        # Đường dẫn tới file của bạn
         current_dir = os.path.dirname(os.path.abspath(__file__))
         backend_dir = os.path.dirname(current_dir)
         csv_path = os.path.join(backend_dir, 'data', 'hcm_aqi_full_dataset.csv')

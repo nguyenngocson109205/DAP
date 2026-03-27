@@ -1,13 +1,9 @@
 from flask import Blueprint, request, jsonify, session
 
-# 1. Bỏ import cũ: from app.services.api_services import ask_gpt 
-# 2. Import RAG Agent mới của chúng ta vào:
 from app.services.chatbot_service import get_chatbot_answer 
 from app.services.ai_service import ai_service 
 
 main = Blueprint("main", __name__)
-
-# --- ENDPOINT CHATBOT (ĐÃ ĐƯỢC NÂNG CẤP LÊN RAG) ---
 @main.route("/chat", methods=["POST"])
 def chat():
     # Khởi tạo lịch sử chat nếu chưa có
@@ -28,8 +24,6 @@ def chat():
 
     # Gọi RAG Agent xử lý dữ liệu CSV thay vì GPT chat thông thường
     try:
-        # Lưu ý: Agent Langchain xử lý tốt nhất khi nhận câu hỏi trực tiếp (user_msg)
-        # thay vì nhận nguyên mảng history như ask_gpt cũ.
         reply = get_chatbot_answer(user_msg)
         
     except Exception as e:
@@ -44,14 +38,12 @@ def chat():
 
     return jsonify({"reply": reply})
 
-
-# --- ENDPOINT PREDICT (GIỮ NGUYÊN - Rất tốt) ---
 @main.route("/predict", methods=["POST"])
 def predict():
     try:
         data = request.get_json()
         
-        # 1. Chỉ lấy tên model từ Node.js gửi qua (mặc định là lstm)
+        # 1. Chỉ lấy tên model từ Node.js gửi qua 
         model_type = data.get('model', 'lstm').lower() 
         
         # 2. BỎ LUÔN ĐOẠN CHECK FEATURES CŨ ĐI
@@ -73,7 +65,6 @@ def predict():
     except Exception as e:
         print(f"Prediction Error: {e}")
         return jsonify({'error': str(e)}), 400
-# --- ENDPOINT LẤY DỮ LIỆU THỜI TIẾT THỰC TẾ ---
 @main.route("/weather-forecast", methods=["GET"])
 def get_weather():
     try:

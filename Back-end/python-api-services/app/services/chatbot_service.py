@@ -14,7 +14,6 @@ from app.data_loader import get_df
 
 # Trong hàm xử lý, gọi nó ra
 df = get_df() 
-# Lúc này Python sẽ kiểm tra: nếu nạp rồi thì nó lấy cái có sẵn, không bao giờ nạp lần 2.
 def get_chatbot_answer(user_message):
     """
     Hàm xử lý Chatbot: GPT-4o-mini + Pandas Agent.
@@ -53,20 +52,17 @@ def get_chatbot_answer(user_message):
             llm, 
             df, 
             verbose=True, 
-            allow_dangerous_code=True, # Cần thiết để chạy Pandas
+            allow_dangerous_code=True, 
             agent_type="openai-tools",
             prefix=system_prompt,
-            max_iterations=3,           # Giới hạn 3 lần thử để tránh treo server
-            handle_parsing_errors=True # Tự sửa lỗi nếu output định dạng sai
+            max_iterations=3,           
+            handle_parsing_errors=True 
         )
         
-        # 5. Thực hiện truy vấn
-        # Thêm chỉ dẫn ép buộc vào cuối câu hỏi của user để Bot không quên nhiệm vụ
         final_input = f"{user_message} (Lưu ý: Chỉ dùng dữ liệu từ biến df, không tự tạo data giả)"
         
         response = agent.invoke({"input": final_input})
         
-        # Trả về câu trả lời cuối cùng
         return response['output']
         
     except Exception as e:

@@ -224,11 +224,11 @@ document.addEventListener('DOMContentLoaded', function () {
     btnRender.addEventListener('click', async function () {
         const metricSelect = document.getElementById('filterMetric');
         const timeSelect = document.getElementById('filterTime');
-        const chartTypeSelect = document.getElementById('filterChartType'); // <-- Lấy dropdown mới thêm
+        const chartTypeSelect = document.getElementById('filterChartType');
 
         const metricValue = metricSelect.value;
         const timeRange = timeSelect.value;
-        const chartType = chartTypeSelect.value; // <-- Lấy giá trị loại biểu đồ (line, bar, pie)
+        const chartType = chartTypeSelect.value;
 
         const metricLabel = metricSelect.options[metricSelect.selectedIndex].text;
         const timeLabel = timeSelect.options[timeSelect.selectedIndex].text;
@@ -236,8 +236,14 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('chartTitle').innerText = `Đang tải dữ liệu từ vệ tinh...`;
 
         try {
+            // FIX 1: Khử lỗi múi giờ UTC của JavaScript, ép lấy đúng ngày của Việt Nam
+            const getLocalDate = (d) => {
+                const tzOffset = d.getTimezoneOffset() * 60000;
+                return new Date(d.getTime() - tzOffset).toISOString().split('T')[0];
+            };
+
             const today = new Date();
-            const endDate = today.toISOString().split('T')[0];
+            const endDate = getLocalDate(today);
 
             let startDate = new Date();
             let pastDays = 1;
@@ -246,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (timeRange === '1m') pastDays = 30;
 
             startDate.setDate(today.getDate() - pastDays);
-            const startDateString = startDate.toISOString().split('T')[0];
+            const startDateString = getLocalDate(startDate);
 
             const lat = 10.7756;
             const lon = 106.7019;
@@ -260,7 +266,6 @@ document.addEventListener('DOMContentLoaded', function () {
             let labels = [];
             let values = [];
 
-            // Xử lý màu sắc cơ bản cho Line và Bar chart
             let chartColor = '#198754';
             let metricArray = hourlyData.european_aqi;
 
@@ -272,10 +277,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 chartColor = '#0dcaf0';
             }
 
-            // Xử lý dữ liệu theo thời gian (24h hoặc gom nhóm theo ngày)
+            // FIX 2: Tìm đúng vị trí Giờ Hiện Tại để cắt lùi lại 24 tiếng (Y chang bên Python)
             if (timeRange === '24h') {
-                labels = hourlyData.time.slice(-24).map(t => t.substring(11, 16));
-                values = metricArray.slice(-24);
+                const currentHourStr = today.getHours().toString().padStart(2, '0') + ':00';
+                const todayStr = endDate + 'T' + currentHourStr;
+                let currentIndex = hourlyData.time.indexOf(todayStr);
+
+                // Nếu không tìm thấy thì dự phòng lấy phần tử cuối
+                if (currentIndex === -1) currentIndex = hourlyData.time.length - 1;
+
+                // Cắt đúng 24 tiếng tính từ giờ hiện tại
+                labels = hourlyData.time.slice(currentIndex - 23, currentIndex + 1).map(t => t.substring(11, 16));
+                values = metricArray.slice(currentIndex - 23, currentIndex + 1);
             } else {
                 let dailyData = {};
                 for (let i = 0; i < hourlyData.time.length; i++) {
@@ -291,23 +304,21 @@ document.addEventListener('DOMContentLoaded', function () {
             // =====================================
             // TÙY BIẾN CHO TỪNG LOẠI BIỂU ĐỒ
             // =====================================
-            let bgColors = chartColor + '33'; // Mặc định là màu trong suốt cho Line/Bar
+            let bgColors = chartColor + '33';
             let borderColors = chartColor;
 
-            // Nếu là biểu đồ Pie (Tròn), cần mảng nhiều màu khác nhau để phân biệt các lát cắt
             if (chartType === 'pie') {
                 bgColors = labels.map((_, i) => `hsl(${(i * 360) / labels.length}, 70%, 60%)`);
-                borderColors = '#ffffff'; // Viền trắng phân cách các lát cắt
+                borderColors = '#ffffff';
             } else if (chartType === 'bar') {
-                bgColors = chartColor + '80'; // Làm đậm màu cột lên chút xíu so với background của line
+                bgColors = chartColor + '80';
             }
 
             const ctx = document.getElementById('myChart').getContext('2d');
             if (myChartInstance) myChartInstance.destroy();
 
-            // Khởi tạo Chart
             myChartInstance = new Chart(ctx, {
-                type: chartType, // Truyền biến chartType ('line', 'bar', 'pie') vào đây
+                type: chartType,
                 data: {
                     labels: labels,
                     datasets: [{
@@ -316,9 +327,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         borderColor: borderColors,
                         backgroundColor: bgColors,
                         borderWidth: 2,
-                        tension: 0.3, // Chỉ có tác dụng với Line
-                        fill: chartType === 'line', // Chỉ biểu đồ Line mới tô màu dưới đáy
-                        pointRadius: timeRange === '24h' ? 3 : 4 // Tùy biến độ lớn điểm cho Line
+                        tension: 0.3,
+                        fill: chartType === 'line',
+                        pointRadius: timeRange === '24h' ? 3 : 4
                     }]
                 },
                 options: {
@@ -327,10 +338,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     plugins: {
                         legend: {
                             display: true,
-                            position: chartType === 'pie' ? 'right' : 'top' // Dời legend cho Pie
+                            position: chartType === 'pie' ? 'right' : 'top'
                         }
                     },
-                    scales: chartType === 'pie' ? {} : { // Ẩn cột x/y nếu là biểu đồ tròn
+                    scales: chartType === 'pie' ? {} : {
                         x: { grid: { display: false } },
                         y: { beginAtZero: true }
                     }
@@ -344,6 +355,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('chartTitle').innerText = "Lỗi kết nối máy chủ dữ liệu!";
         }
     });
+    btnRender.click();
 });
 
 
@@ -481,7 +493,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // --- 1. VẼ BIỂU ĐỒ HOA GIÓ CŨ ---
             const domId_Wind = `wind-m${target.m}-y${target.y}`;
             const dom_Wind = document.getElementById(domId_Wind);
-            
+
             const key = `m${target.m}_y${target.y}`;
             const chartData = data.grid[key];
 
@@ -521,38 +533,38 @@ document.addEventListener('DOMContentLoaded', function () {
                 pm25Instances.push(myChart_PM25);
 
                 if (!chartData || !chartData.avg_pm25) { // Kiểm tra xem file JSON có trường avg_pm25 không
-                     myChart_PM25.setOption({ title: { text: 'Thiếu dữ liệu PM2.5' } });
+                    myChart_PM25.setOption({ title: { text: 'Thiếu dữ liệu PM2.5' } });
                 } else {
-                     myChart_PM25.setOption({
-                         tooltip: {
-                             trigger: 'axis',
-                             axisPointer: { type: 'shadow' },
-                             formatter: 'Hướng: {b}<br/>PM2.5 TB: {c} µg/m³'
-                         },
-                         grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
-                         xAxis: {
-                             type: 'category',
-                             data: data.directions,
-                             axisLabel: { interval: 0, rotate: 45, fontSize: 10 }
-                         },
-                         yAxis: {
-                             type: 'value',
-                             name: 'PM2.5 (µg/m³)'
-                         },
-                         series: [
-                             {
-                                 name: 'PM2.5',
-                                 type: 'bar',
-                                 data: chartData.avg_pm25, // Dữ liệu này bạn phải chuẩn bị trong JSON
-                                 itemStyle: {
-                                     color: function(params) {
-                                         // Đổi màu thông minh: Vượt ngưỡng thì màu đỏ, an toàn thì xanh
-                                         return params.value > 50 ? '#ff4d4f' : '#73d13d';
-                                     }
-                                 }
-                             }
-                         ]
-                     });
+                    myChart_PM25.setOption({
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: { type: 'shadow' },
+                            formatter: 'Hướng: {b}<br/>PM2.5 TB: {c} µg/m³'
+                        },
+                        grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+                        xAxis: {
+                            type: 'category',
+                            data: data.directions,
+                            axisLabel: { interval: 0, rotate: 45, fontSize: 10 }
+                        },
+                        yAxis: {
+                            type: 'value',
+                            name: 'PM2.5 (µg/m³)'
+                        },
+                        series: [
+                            {
+                                name: 'PM2.5',
+                                type: 'bar',
+                                data: chartData.avg_pm25, // Dữ liệu này bạn phải chuẩn bị trong JSON
+                                itemStyle: {
+                                    color: function (params) {
+                                        // Đổi màu thông minh: Vượt ngưỡng thì màu đỏ, an toàn thì xanh
+                                        return params.value > 50 ? '#ff4d4f' : '#73d13d';
+                                    }
+                                }
+                            }
+                        ]
+                    });
                 }
             }
         });

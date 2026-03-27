@@ -4,25 +4,39 @@ A. PHẦN 1: DỮ LIỆU TỔNG HỢP (CHƯƠNG 1 -> 5)
 const DATA_URL = './data/hcm_aqi_dataset.json';
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Khởi tạo theo đúng thứ tự 1 -> 5 trên HTML
+    let chartSeason = echarts.init(document.getElementById('chartSeason'));
     let chartMonth = echarts.init(document.getElementById('chartMonth'));
     let chartHour = echarts.init(document.getElementById('chartHour'));
     let chartCause = echarts.init(document.getElementById('chartCause'));
     let chartWind = echarts.init(document.getElementById('chartWind'));
     let chartHumidity = echarts.init(document.getElementById('chartHumidity'));
-    let chartSeason = echarts.init(document.getElementById('chartSeason'));
 
+    // Resize theo đúng thứ tự
     window.addEventListener('resize', function () {
-        chartMonth.resize(); chartHour.resize(); chartCause.resize();
-        chartWind.resize(); chartHumidity.resize(); chartSeason.resize();
+        chartSeason.resize(); chartMonth.resize(); chartHour.resize();
+        chartCause.resize(); chartWind.resize(); chartHumidity.resize();
     });
 
     function renderCharts(rawData) {
         if (!Array.isArray(rawData) || rawData.length < 2) return;
         const dataRows = rawData.slice(1);
 
+        // ==========================================
+        // XỬ LÝ DỮ LIỆU CHUNG
+        // ==========================================
+        const header = rawData[0];
+        const iPM25 = header.indexOf('PM2.5') > 0 ? header.indexOf('PM2.5') : 1;
+        const iPM10 = header.indexOf('PM10') > 0 ? header.indexOf('PM10') : 2;
+        const iNO2 = header.indexOf('NO2') > 0 ? header.indexOf('NO2') : 3;
+
         const pm25ByMonth = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         const monthCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         const yearData = {};
+
+        // Mảng chứa data cho biểu đồ Scatter Tương quan
+        const pm10Scatter = [];
+        const no2Scatter = [];
 
         dataRows.forEach((row) => {
             const monthStr = row[0];
@@ -33,35 +47,106 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const y = parseInt(parts[0]);
             const m = parseInt(parts[1]) - 1;
-            const pm25 = Number(row[1]) || 0;
 
-            pm25ByMonth[m] += pm25;
+            const pm25Val = Number(row[iPM25]) || 0;
+            const pm10Val = Number(row[iPM10]) || 0;
+            const no2Val = Number(row[iNO2]) || 0;
+
+            // Dữ liệu cho biểu đồ Mùa vụ
+            pm25ByMonth[m] += pm25Val;
             monthCounts[m] += 1;
-
             if (!yearData[y]) yearData[y] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-            yearData[y][m] = pm25;
+            yearData[y][m] = pm25Val;
+
+            // Dữ liệu cho biểu đồ SCATTER TƯƠNG QUAN
+            if (pm25Val > 0) {
+                if (pm10Val > 0) pm10Scatter.push([pm10Val, pm25Val]);
+                if (no2Val > 0) no2Scatter.push([no2Val, pm25Val]);
+            }
         });
 
-        const pm25Avg = pm25ByMonth.map((v, i) => monthCounts[i] ? (v / monthCounts[i]).toFixed(1) : 0);
-        const rainMock = [15, 10, 20, 60, 200, 300, 320, 280, 250, 150, 50, 20];
+        // ==========================================
+        // 1. CHART MÙA VỤ THEO NĂM (chartSeason)
+        // ==========================================
+        const availableYears = Object.keys(yearData).sort();
+        const yearColors = ['#94a3b8', '#f59e0b', '#10b981', '#3b82f6'];
 
-        // 1. CHART THÁNG
+        chartSeason.setOption({
+            tooltip: { trigger: 'axis' },
+            legend: { data: availableYears.map(y => `Năm ${y}`), top: 0 },
+            grid: { left: '5%', right: '5%', bottom: '10%', containLabel: true },
+            xAxis: { type: 'category', boundaryGap: false, data: ['Tháng 1', 'Th 2', 'Th 3', 'Th 4', 'Th 5', 'Th 6', 'Th 7', 'Th 8', 'Th 9', 'Th 10', 'Th 11', 'Th 12'] },
+            yAxis: { type: 'value', name: 'PM2.5 (µg/m³)' },
+            series: availableYears.map((y, idx) => ({
+                name: `Năm ${y}`, type: 'line', smooth: true,
+                data: yearData[y].map(v => v ? v.toFixed(1) : null),
+                lineStyle: { width: idx === availableYears.length - 1 ? 4 : 2, color: yearColors[idx % yearColors.length] },
+                itemStyle: { color: yearColors[idx % yearColors.length] },
+                areaStyle: idx === availableYears.length - 1 ? { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(16, 185, 129, 0.3)' }, { offset: 1, color: 'rgba(16, 185, 129, 0)' }]) } : null
+            }))
+        });
+
+        // ====================================================================
+        // 2. CHART TƯƠNG QUAN THỰC SỰ (SCATTER PLOT ĐA TRỤC) - Dùng DOM chartMonth
+        // ====================================================================
         chartMonth.setOption({
-            tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
-            legend: { data: ['PM2.5 Trung bình', 'Lượng mưa (mm)'] },
-            grid: { left: '10%', right: '10%', bottom: '15%' },
-            xAxis: { type: 'category', data: ['Th 1', 'Th 2', 'Th 3', 'Th 4', 'Th 5', 'Th 6', 'Th 7', 'Th 8', 'Th 9', 'Th 10', 'Th 11', 'Th 12'] },
-            yAxis: [
-                { type: 'value', name: 'PM2.5 (µg/m³)' },
-                { type: 'value', name: 'Mưa (mm)', splitLine: { show: false } }
+            title: {
+                text: 'Phân tán tương quan giữa PM2.5 với PM10 & Khí NO2',
+                left: 'center',
+                top: 0,
+                textStyle: { fontSize: 14, color: '#475569', fontWeight: 'bold' }
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: function (params) {
+                    const xName = params.seriesIndex === 0 ? 'PM10' : 'Khí NO2';
+                    return `<b>${params.seriesName}</b><br/>${xName}: <b>${params.value[0]}</b><br/>PM2.5: <b>${params.value[1]}</b> µg/m³`;
+                }
+            },
+            legend: { data: ['PM10 vs PM2.5', 'NO2 vs PM2.5'], top: 25 },
+            grid: { left: '10%', right: '10%', bottom: '15%', top: '25%' },
+            xAxis: [
+                {
+                    type: 'value', name: 'PM10 (Bụi thô)', position: 'bottom',
+                    axisLine: { show: true, lineStyle: { color: '#ef4444', width: 2 } },
+                    axisLabel: { color: '#ef4444' },
+                    splitLine: { show: false }
+                },
+                {
+                    type: 'value', name: 'NO2 (Khí thải)', position: 'top',
+                    axisLine: { show: true, lineStyle: { color: '#3b82f6', width: 2 } },
+                    axisLabel: { color: '#3b82f6' },
+                    splitLine: { show: false }
+                }
             ],
+            yAxis: {
+                type: 'value', name: 'PM2.5 (µg/m³)',
+                splitLine: { lineStyle: { type: 'dashed', color: '#e2e8f0' } },
+                axisLine: { show: true, lineStyle: { color: '#475569', width: 2 } }
+            },
             series: [
-                { name: 'PM2.5 Trung bình', type: 'bar', data: pm25Avg, itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#f59e0b' }, { offset: 1, color: '#fbbf24' }]), borderRadius: [5, 5, 0, 0] } },
-                { name: 'Lượng mưa (mm)', type: 'line', yAxisIndex: 1, data: rainMock, smooth: true, lineStyle: { color: '#3b82f6', width: 3 }, areaStyle: { color: 'rgba(59, 130, 246, 0.2)' } }
+                {
+                    name: 'PM10 vs PM2.5',
+                    type: 'scatter',
+                    xAxisIndex: 0,
+                    data: pm10Scatter,
+                    itemStyle: { color: '#ef4444', opacity: 0.6 },
+                    symbolSize: 8
+                },
+                {
+                    name: 'NO2 vs PM2.5',
+                    type: 'scatter',
+                    xAxisIndex: 1,
+                    data: no2Scatter,
+                    itemStyle: { color: '#3b82f6', opacity: 0.6 },
+                    symbolSize: 8
+                }
             ]
         });
 
-        // 2. CHART GIỜ
+        // ==========================================
+        // 3. CHART NHỊP SINH HỌC THEO GIỜ (chartHour)
+        // ==========================================
         const xHours = ['0h', '2h', '4h', '6h', '8h', '10h', '12h', '14h', '16h', '18h', '20h', '22h'];
         chartHour.setOption({
             tooltip: { trigger: 'axis' },
@@ -74,16 +159,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 lineStyle: { width: 4, color: '#ef4444' },
                 areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(239, 68, 68, 0.5)' }, { offset: 1, color: 'rgba(239, 68, 68, 0)' }]) },
                 markPoint: {
-                    // THÊM ĐOẠN FORMAT LABEL NÀY ĐỂ HIỂN THỊ 2 DÒNG
-                    label: {
-                        show: true,
-                        formatter: '{c}', // {b} là Tên (name), {c} là Giá trị (value)
-                        lineHeight: 16,        // Chỉnh khoảng cách 2 dòng chữ cho xịn
-                        align: 'center'
-                    },
+                    label: { show: true, formatter: '{c}', lineHeight: 16, align: 'center' },
                     data: [
                         { type: 'max', itemStyle: { color: '#991b1b' } },
-                        // THÊM value: 120 VÀO ĐÂY NÈ BRO
                         { coord: [4, 120], value: 120, itemStyle: { color: '#dc2626' } },
                         { type: 'min', name: 'Min', itemStyle: { color: '#10b981' } }
                     ]
@@ -91,7 +169,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }]
         });
 
-        // 3. CHART NGUYÊN NHÂN (NO2)
+        // ==========================================
+        // 4. CHART NGUYÊN NHÂN NO2 (chartCause)
+        // ==========================================
         const xTrafficHours = ['0h', '4h', '8h (Đi làm)', '12h', '16h', '18h (Tan tầm)', '22h'];
         chartCause.setOption({
             tooltip: { trigger: 'axis' },
@@ -105,7 +185,9 @@ document.addEventListener('DOMContentLoaded', function () {
             ]
         });
 
-        // 4. CHART GIÓ & ĐỘ ẨM
+        // ==========================================
+        // 5. CHART GIÓ & ĐỘ ẨM (chartWind, chartHumidity)
+        // ==========================================
         const windData = []; const humData = [];
         for (let i = 0; i < 200; i++) {
             let wd = Math.random() * 360; let pmW = 15 + Math.random() * 30;
@@ -136,25 +218,6 @@ document.addEventListener('DOMContentLoaded', function () {
             visualMap: { show: false, min: 40, max: 100, dimension: 0, inRange: { color: ['#cbd5e1', '#3b82f6', '#1e3a8a'] } },
             series: [{ type: 'scatter', data: humData, symbolSize: 8, itemStyle: { opacity: 0.7 } }]
         });
-
-        // 5. CHART MÙA VỤ THEO NĂM
-        const availableYears = Object.keys(yearData).sort();
-        const yearColors = ['#94a3b8', '#f59e0b', '#10b981', '#3b82f6'];
-
-        chartSeason.setOption({
-            tooltip: { trigger: 'axis' },
-            legend: { data: availableYears.map(y => `Năm ${y}`), top: 0 },
-            grid: { left: '5%', right: '5%', bottom: '10%', containLabel: true },
-            xAxis: { type: 'category', boundaryGap: false, data: ['Tháng 1', 'Th 2', 'Th 3', 'Th 4', 'Th 5', 'Th 6', 'Th 7', 'Th 8', 'Th 9', 'Th 10', 'Th 11', 'Th 12'] },
-            yAxis: { type: 'value', name: 'PM2.5 (µg/m³)' },
-            series: availableYears.map((y, idx) => ({
-                name: `Năm ${y}`, type: 'line', smooth: true,
-                data: yearData[y].map(v => v ? v.toFixed(1) : null),
-                lineStyle: { width: idx === availableYears.length - 1 ? 4 : 2, color: yearColors[idx % yearColors.length] },
-                itemStyle: { color: yearColors[idx % yearColors.length] },
-                areaStyle: idx === availableYears.length - 1 ? { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(16, 185, 129, 0.3)' }, { offset: 1, color: 'rgba(16, 185, 129, 0)' }]) } : null
-            }))
-        });
     }
 
     $.get(DATA_URL, function (res) {
@@ -163,7 +226,6 @@ document.addEventListener('DOMContentLoaded', function () {
         console.error("Lỗi tải file: " + DATA_URL);
     });
 });
-
 
 /* =========================================================
    B. PHẦN 2: CHƯƠNG 6 - HOA GIÓ & BIỂU ĐỒ CỘT PM2.5
@@ -180,7 +242,6 @@ document.addEventListener('DOMContentLoaded', function () {
         ];
 
         targets.forEach(function (target) {
-            // --- 1. VẼ BIỂU ĐỒ HOA GIÓ ---
             const domId_Wind = `wind-m${target.m}-y${target.y}`;
             const dom_Wind = document.getElementById(domId_Wind);
 
@@ -213,10 +274,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 }
             }
-
         });
 
-        // Hỗ trợ resize cho 18 biểu đồ mới
         window.addEventListener('resize', function () {
             windInstances.forEach(chart => chart.resize());
             pm25Instances.forEach(chart => chart.resize());

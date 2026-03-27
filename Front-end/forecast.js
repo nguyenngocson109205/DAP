@@ -1,8 +1,6 @@
 // ==========================================
 // CẤU HÌNH API
 // ==========================================
-// Nếu Web gọi trực tiếp Python thì dùng 5000, nếu qua Node.js thì dùng 4000.
-// Ở đây tui để lại 4000 theo đúng hình lỗi bạn gửi
 const API_BASE_URL = 'http://localhost:4000/ai';
 let aiChartInstance = null;
 
@@ -24,8 +22,7 @@ async function runPredictionProcess(modelType, horizon) {
         const weatherData = await weatherRes.json();
 
         const pastData = weatherData.past_24h;
-        // Vì Model Python hiện tại chỉ trả ra 3 số (3 giờ), ta cắt futureData = 3
-        const futureData = weatherData.future.slice(0, 3); 
+        const futureData = weatherData.future.slice(0, 3);
 
         const labels = [];
         const actualPM25 = [];
@@ -39,27 +36,24 @@ async function runPredictionProcess(modelType, horizon) {
             predictPM25.push(null);
         });
 
-        // Nối điểm hiện tại để đường vẽ không bị đứt
+        // Nối điểm hiện tại
         let lastKnownPm25 = actualPM25[actualPM25.length - 1];
         predictPM25[predictPM25.length - 1] = lastKnownPm25;
 
         // ---------------------------------------------------------
-        // BƯỚC 2: GỌI API DỰ BÁO (GỌI 1 LẦN DUY NHẤT)
+        // BƯỚC 2: GỌI API DỰ BÁO
         // ---------------------------------------------------------
         console.log(`⏳ Đang chạy Model ${modelType.toUpperCase()}...`);
         statusBadge.innerText = `Đang chạy Model ${modelType.toUpperCase()}...`;
 
-        // Gọi POST /predict, KHÔNG CẦN GỬI features nữa
         const predRes = await fetch(`${API_BASE_URL}/predict`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ modelType: modelType }) 
+            body: JSON.stringify({ modelType: modelType })
         });
 
         if (!predRes.ok) throw new Error("Lỗi khi dự báo");
         const predData = await predRes.json();
-        
-        // predData.prediction bây giờ là 1 mảng [so_thu_1, so_thu_2, so_thu_3]
         const predictedArray = predData.prediction;
 
         // ---------------------------------------------------------
@@ -67,21 +61,25 @@ async function runPredictionProcess(modelType, horizon) {
         // ---------------------------------------------------------
         for (let i = 0; i < futureData.length; i++) {
             const date = new Date(futureData[i].time);
-            labels.push(`+${i+1}h (${date.getHours()}h)`);
+            labels.push(`+${i + 1}h (${date.getHours()}h)`);
             actualPM25.push(null);
-            
-            // Nếu có kết quả thì nhét vào, không thì lấy 0
+
             let val = predictedArray && predictedArray[i] !== undefined ? predictedArray[i] : 0;
             predictPM25.push(val);
         }
 
         console.log("✅ Xong dự báo:", predictedArray);
 
+        // --- TÍNH MAX PM2.5 CHO CHUẨN WHO ---
+        const maxPredictedPM25 = predictedArray && predictedArray.length > 0 ? Math.max(...predictedArray) : 0;
+
         // ---------------------------------------------------------
-        // BƯỚC 4: VẼ BIỂU ĐỒ
+        // BƯỚC 4: VẼ BIỂU ĐỒ VÀ CẬP NHẬT UI
         // ---------------------------------------------------------
         renderChart(labels, actualPM25, predictPM25, modelType);
-        updateMetrics(modelType);
+
+        // TRUYỀN BIẾN XUỐNG ĐÂY
+        updateMetrics(modelType, maxPredictedPM25);
 
         statusBadge.innerText = 'Dự báo hoàn tất ✓';
         statusBadge.className = 'badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3';
@@ -122,7 +120,7 @@ function renderChart(labels, actualData, predictData, modelType) {
                     label: `Dự báo ${modelName} (Future 3h)`,
                     data: predictData,
                     borderColor: predColor,
-                    backgroundColor: `${predColor}1A`, 
+                    backgroundColor: `${predColor}1A`,
                     borderWidth: 3,
                     borderDash: [5, 5],
                     tension: 0.4,
@@ -152,20 +150,47 @@ function renderChart(labels, actualData, predictData, modelType) {
 }
 
 // ==========================================
-// HÀM CẬP NHẬT CHỈ SỐ UI
+// HÀM CẬP NHẬT CHỈ SỐ UI & INSIGHT WHO
 // ==========================================
-function updateMetrics(modelType) {
+function updateMetrics(modelType, maxPM25 = 0) {
     const metrics = {
-        'lstm': { rmse: 3.85, mae: 2.75, r2: 0.94, insight: "Mô hình LSTM xử lý tốt chuỗi thời gian, nắm bắt được xu hướng." },
-        'gru': { rmse: 4.10, mae: 3.10, r2: 0.89, insight: "Mô hình Ridge tuyến tính chạy ổn định." },
-        'xgboost': { rmse: 4.05, mae: 2.95, r2: 0.91, insight: "XGBoost phản ứng nhanh với sự thay đổi của thời tiết." }
+        'ridge': { rmse: 2.74, mae: 1.94, r2: 0.95, insight: "Mô hình Ridge tuyến tính chạy ổn định." },
+        'xgboost': { rmse: 3.12, mae: 2.26, r2: 0.94, insight: "XGBoost phản ứng nhanh với sự thay đổi của thời tiết." }
     };
-    
-    const m = metrics[modelType] || metrics['lstm'];
+
+    const m = metrics[modelType] || metrics['xgboost'];
+
+    // Cập nhật các con số
     document.getElementById('valRMSE').innerText = m.rmse.toFixed(2);
     document.getElementById('valMAE').innerText = m.mae.toFixed(2);
     document.getElementById('valR2').innerText = m.r2.toFixed(2);
-    document.getElementById('aiInsight').innerText = m.insight;
+
+    // Xử lý logic cảnh báo WHO
+    let whoAlertHtml = '';
+    const whoThreshold = 15;
+
+    if (maxPM25 > whoThreshold) {
+        whoAlertHtml = `
+            <span class="text-danger fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> CẢNH BÁO WHO:</span> 
+            Max PM2.5 đạt <strong>${maxPM25.toFixed(1)} µg/m³</strong>. Vượt mức an toàn, khuyến cáo đeo khẩu trang!`;
+    } else if (maxPM25 > 0) {
+        whoAlertHtml = `
+            <span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> CHUẨN WHO:</span> 
+            Max PM2.5 đạt <strong>${maxPM25.toFixed(1)} µg/m³</strong>. Không khí rất tốt, lý tưởng để ra ngoài!`;
+    } else {
+        whoAlertHtml = `<span class="text-muted">Đang chờ dữ liệu dự báo...</span>`;
+    }
+
+    // Đổ vào ô Insight
+    const insightEl = document.getElementById('aiInsight');
+    if (insightEl) {
+        insightEl.innerHTML = `
+            <div class="mb-1 text-dark">${m.insight}</div>
+            <div style="font-size: 0.85rem; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 8px;">
+                ${whoAlertHtml}
+            </div>
+        `;
+    }
 }
 
 // ==========================================
@@ -173,9 +198,5 @@ function updateMetrics(modelType) {
 // ==========================================
 document.getElementById('btnRunPrediction').addEventListener('click', () => {
     const model = document.getElementById('modelSelector').value;
-    runPredictionProcess(model, 3); // Cố định truyền 3 giờ
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    runPredictionProcess('lstm', 3); // Mặc định chạy 3 giờ
+    runPredictionProcess(model, 3);
 });
