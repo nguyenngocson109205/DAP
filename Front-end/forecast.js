@@ -154,8 +154,8 @@ function renderChart(labels, actualData, predictData, modelType) {
 // ==========================================
 function updateMetrics(modelType, maxPM25 = 0) {
     const metrics = {
-        'ridge': { rmse: 2.74, mae: 1.94, r2: 0.95, insight: "Mô hình Ridge tuyến tính chạy ổn định." },
-        'xgboost': { rmse: 3.12, mae: 2.26, r2: 0.94, insight: "XGBoost phản ứng nhanh với sự thay đổi của thời tiết." }
+        'ridge': { rmse: 6.3764, mae: 4.3946, r2: 0.8218, insight: "Mô hình Ridge tuyến tính chạy ổn định." },
+        'xgboost': { rmse: 6.0455, mae: 4.2096, r2: 0.8406, insight: "XGBoost phản ứng nhanh với sự thay đổi của thời tiết." }
     };
 
     const m = metrics[modelType] || metrics['xgboost'];
