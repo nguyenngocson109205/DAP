@@ -17,37 +17,32 @@ df = get_df()
 def get_chatbot_answer(user_message):
     """
     Hàm xử lý Chatbot: GPT-4o-mini + Pandas Agent.
-    Đã được tối ưu để chống ảo giác và chống sập server Windows.
     """
     if df is None:
         return "Xin lỗi, dữ liệu AQI chưa được nạp. Vui lòng kiểm tra file CSV."
     
     try:
-        # 1. Khởi tạo bộ não GPT-4o-mini (Rẻ, nhanh, cực thông minh)
         llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
         
-        # 2. Quét thông tin thực tế từ dữ liệu để "dằn mặt" Bot
         min_date = df['time'].min().strftime('%d/%m/%Y')
         max_date = df['time'].max().strftime('%d/%m/%Y')
         latest_year = df['time'].max().year
         
-        # 3. Prompt cực kỳ nghiêm ngặt - Chống tự chế dữ liệu
-        system_prompt = f"""Bạn là Chuyên gia phân tích chất lượng không khí (AQI) tại TP.HCM.
+        # 3. Prompt mới: Phân luồng tư duy rõ ràng
+        system_prompt = f"""Bạn là Chuyên gia tư vấn Chất lượng không khí (AQI) tại TP.HCM.
         
-[DỮ LIỆU THỰC TẾ TRONG FILE]:
-- Bạn đang làm việc với một DataFrame tên là 'df'.
-- Khoảng thời gian: Từ ngày {min_date} đến ngày {max_date}.
-- Các cột: {', '.join(df.columns.tolist())}
+[DỮ LIỆU LỊCH SỬ TRONG FILE]:
+- Biến DataFrame 'df' chứa dữ liệu từ {min_date} đến {max_date}.
+- CHỈ tra cứu 'df' khi người dùng hỏi về các thông số trong quá khứ.
 
 [QUY TẮC BẮT BUỘC]:
-1. CHỈ sử dụng biến 'df' có sẵn. TUYỆT ĐỐI KHÔNG dùng pd.read_csv() hay tạo dữ liệu giả.
-2. Trả lời bằng Tiếng Việt thân thiện, chuyên nghiệp.
-3. Nếu người dùng hỏi ngày/tháng mà không nói năm, mặc định tính toán trên năm {latest_year}.
-4. Luôn dùng code Pandas để kiểm tra dữ liệu trước khi đưa ra con số.
-5. Nếu không tìm thấy dữ liệu sau khi đã dùng code tìm kiếm, hãy nói rõ: "Dữ liệu thời điểm này không có trong hệ thống".
+1. NẾU người dùng tự cung cấp chỉ số (ví dụ: "PM2.5 hiện tại là 19.9, tôi có nên ra đường không?"): TUYỆT ĐỐI KHÔNG dùng code Pandas. Hãy dùng kiến thức chuyên môn của bạn để tư vấn ngay lập tức (Ví dụ: ngưỡng an toàn WHO cho PM2.5 24h là 15 µg/m³).
+2. NẾU người dùng hỏi xin lời khuyên chung chung, hãy trả lời tự nhiên.
+3. NẾU người dùng yêu cầu tra cứu lịch sử: LUÔN BẮT ĐẦU code bằng `import pandas as pd` và LUÔN dùng `print()` để in kết quả cuối cùng.
+4. Nếu đã tra cứu lịch sử trong 'df' mà không có dữ liệu, mới trả lời: "Dữ liệu thời điểm này không có trong hệ thống".
+5. Trả lời bằng Tiếng Việt thân thiện, chuyên nghiệp, ngắn gọn.
 """
 
-        # 4. Khởi tạo Agent với các chốt chặn an toàn
         agent = create_pandas_dataframe_agent(
             llm, 
             df, 
@@ -55,7 +50,7 @@ def get_chatbot_answer(user_message):
             allow_dangerous_code=True, 
             agent_type="openai-tools",
             prefix=system_prompt,
-            max_iterations=3,           
+            max_iterations=5,  # Tăng lên 5 để Agent không bị ngắt ngang họng
             handle_parsing_errors=True 
         )
         
